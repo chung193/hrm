@@ -39,6 +39,8 @@ interface UserServiceInterface extends BaseServiceInterface
 
     public function updateUserSystem(int $id, array $data): Model;
 
+    public function resetUserPasswordSystem(int $id, string $password): Model;
+
     public function deleteUserSystem(int $id): bool;
 
     public function deleteUsersSystem(array $ids): int;

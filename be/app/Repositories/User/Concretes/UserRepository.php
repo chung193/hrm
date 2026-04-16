@@ -38,9 +38,10 @@ class UserRepository extends QueryableRepository implements UserRepositoryInterf
     {
         return [
             AllowedFilter::exact('id'),
+            AllowedFilter::exact('department_id', 'detail.department_id'),
             'name',
             'email',
-            'is_active'
+            AllowedFilter::exact('is_active'),
         ];
     }
 

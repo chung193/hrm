@@ -19,6 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 class UserService extends BaseService implements UserServiceInterface
 {
+    private const SYSTEM_ROLE_NAMES = ['admin', 'super-admin', 'super admin'];
     private const DETAIL_KEYS = [
         'employee_code',
         'organization_id',
@@ -174,7 +175,7 @@ class UserService extends BaseService implements UserServiceInterface
     public function getAllUsersSystem(): Collection
     {
         $this->assertSystemAdmin();
-        return $this->repository->query()->get();
+        return $this->systemUserQuery()->get();
     }
 
     public function getFilteredUsersSystem(?Request $request = null, int $perPage = 15): LengthAwarePaginator
@@ -182,7 +183,7 @@ class UserService extends BaseService implements UserServiceInterface
         $this->assertSystemAdmin();
 
         $perPage = request('per_page', $perPage);
-        $users = $this->repository->query()->paginate($perPage);
+        $users = $this->systemUserQuery()->paginate($perPage);
 
         $users->getCollection()->load([
             'roles',
@@ -204,8 +205,7 @@ class UserService extends BaseService implements UserServiceInterface
         $this->assertSystemAdmin();
 
         try {
-            $user = $this->userRepository
-                ->query()
+            $user = $this->systemUserQuery()
                 ->with(['roles', 'detail.organization', 'detail.department', 'detail.departmentTitle'])
                 ->findOrFail($id);
 
@@ -219,13 +219,28 @@ class UserService extends BaseService implements UserServiceInterface
     public function createUserSystem(array $data): Model
     {
         $this->assertSystemAdmin();
-        return $this->createUserInternal($data, null);
+        return $this->createUserInternal($data, null, 'admin');
     }
 
     public function updateUserSystem(int $id, array $data): Model
     {
         $this->assertSystemAdmin();
+        $this->systemUserQuery()->findOrFail($id);
         return $this->updateUserInternal($id, $data, null);
+    }
+
+    public function resetUserPasswordSystem(int $id, string $password): Model
+    {
+        $this->assertSystemAdmin();
+
+        try {
+            $this->systemUserQuery()->findOrFail($id);
+            return $this->repository->update($id, [
+                'password' => $password,
+            ]);
+        } catch (ModelNotFoundException) {
+            throw new ModelNotFoundException('User not found');
+        }
     }
 
     public function deleteUserSystem(int $id): bool
@@ -233,7 +248,7 @@ class UserService extends BaseService implements UserServiceInterface
         $this->assertSystemAdmin();
 
         try {
-            $this->repository->findOrFail($id);
+            $this->systemUserQuery()->findOrFail($id);
             $this->repository->delete($id);
             return true;
         } catch (ModelNotFoundException) {
@@ -245,7 +260,7 @@ class UserService extends BaseService implements UserServiceInterface
     {
         $this->assertSystemAdmin();
 
-        $found = $this->userRepository->query()->whereIn('id', $ids)->count();
+        $found = $this->systemUserQuery()->whereIn('id', $ids)->count();
         if ($found !== count($ids)) {
             abort(404, 'Users not found');
         }
@@ -261,17 +276,17 @@ class UserService extends BaseService implements UserServiceInterface
     public function getActiveUsersSystem(): Collection
     {
         $this->assertSystemAdmin();
-        return $this->userRepository->query()->where('is_active', true)->get();
+        return $this->systemUserQuery()->where('is_active', true)->get();
     }
 
-    private function createUserInternal(array $data, ?int $forcedOrganizationId = null): Model
+    private function createUserInternal(array $data, ?int $forcedOrganizationId = null, string $defaultRole = 'client'): Model
     {
-        return DB::transaction(function () use ($data, $forcedOrganizationId) {
+        return DB::transaction(function () use ($data, $forcedOrganizationId, $defaultRole) {
             $userData = Arr::only($data, ['name', 'email', 'password', 'is_active']);
             $detailData = $this->buildDetailData($data, $forcedOrganizationId);
 
             $user = $this->repository->create($userData);
-            $user->assignRole($data['role'] ?? 'client');
+            $user->assignRole($data['role'] ?? $defaultRole);
 
             if (!empty($detailData)) {
                 $user->detail()->updateOrCreate(['user_id' => $user->id], $detailData);
@@ -391,5 +406,14 @@ class UserService extends BaseService implements UserServiceInterface
         if (!$authUser?->isAdmin()) {
             throw new AuthorizationException('Forbidden. System admin access only.');
         }
+    }
+
+    private function systemUserQuery()
+    {
+        return $this->userRepository
+            ->query()
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('name', self::SYSTEM_ROLE_NAMES);
+            });
     }
 }

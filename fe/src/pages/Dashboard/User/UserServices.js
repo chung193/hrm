@@ -108,6 +108,11 @@ export const assignRolesSystem = async (id, roleIds = []) => {
     return response;
 };
 
+export const resetPasswordSystem = async (id, data) => {
+    const response = await authInstance.patch(`admin-user/${id}/password`, data, { skipOrganizationScope: true });
+    return response;
+};
+
 export const destroySystem = async (id) => {
     const response = await authInstance.delete(`admin-user/${id}`, { skipOrganizationScope: true });
     return response;

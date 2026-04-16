@@ -36,59 +36,121 @@
         "initiallyOpen": false,
         "children": [
             {
-                "id": "user",
-                "label": "User",
-                "url": "/dashboard/user"
+                "id": "people",
+                "label": "People",
+                "url": null,
+                "children": [
+                    {
+                        "id": "user",
+                        "label": "User",
+                        "url": "/dashboard/user"
+                    }
+                ]
             },
             {
-                "id": "organization",
-                "label": "Organization",
-                "url": "/dashboard/organization"
+                "id": "structure",
+                "label": "Structure",
+                "url": null,
+                "children": [
+                    {
+                        "id": "organization",
+                        "label": "Organization",
+                        "url": "/dashboard/organization"
+                    },
+                    {
+                        "id": "department",
+                        "label": "Department",
+                        "url": "/dashboard/department"
+                    },
+                    {
+                        "id": "department-title",
+                        "label": "Department Title",
+                        "url": "/dashboard/department-title"
+                    }
+                ]
             },
             {
-                "id": "department",
-                "label": "Department",
-                "url": "/dashboard/department"
+                "id": "contracts",
+                "label": "Contracts",
+                "url": null,
+                "children": [
+                    {
+                        "id": "contract-type",
+                        "label": "Contract Type",
+                        "url": "/dashboard/contract-type"
+                    },
+                    {
+                        "id": "employee-contract",
+                        "label": "Employee Contract",
+                        "url": "/dashboard/employee-contract"
+                    }
+                ]
             },
             {
-                "id": "department-title",
-                "label": "Department Title",
-                "url": "/dashboard/department-title"
+                "id": "recruitment",
+                "label": "Recruitment",
+                "url": null,
+                "children": [
+                    {
+                        "id": "recruitment-settings",
+                        "label": "Recruitment Settings",
+                        "url": "/dashboard/recruitment-settings"
+                    },
+                    {
+                        "id": "recruitment-request",
+                        "label": "Recruitment Requests",
+                        "url": "/dashboard/recruitment-request"
+                    }
+                ]
             },
             {
-                "id": "contract-type",
-                "label": "Contract Type",
-                "url": "/dashboard/contract-type"
+                "id": "time",
+                "label": "Time",
+                "url": null,
+                "children": [
+                    {
+                        "id": "leave-request",
+                        "label": "Leave Requests",
+                        "url": "/dashboard/leave-request"
+                    },
+                    {
+                        "id": "calendar",
+                        "label": "Calendar",
+                        "url": "/dashboard/calendar"
+                    }
+                ]
             },
             {
-                "id": "employee-contract",
-                "label": "Employee Contract",
-                "url": "/dashboard/employee-contract"
-            },
+                "id": "resources",
+                "label": "Resources",
+                "url": null,
+                "children": [
+                    {
+                        "id": "asset-management",
+                        "label": "Assets",
+                        "url": "/dashboard/asset-management"
+                    },
+                    {
+                        "id": "media",
+                        "label": "Media",
+                        "url": "/dashboard/media"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "administration",
+        "label": "Administration",
+        "icon": "security",
+        "url": null,
+        "systemAdminOnly": true,
+        "initiallyOpen": false,
+        "children": [
             {
-                "id": "recruitment-settings",
-                "label": "Recruitment Settings",
-                "url": "/dashboard/recruitment-settings"
-            },
-            {
-                "id": "recruitment-request",
-                "label": "Recruitment Requests",
-                "url": "/dashboard/recruitment-request"
-            },
-            {
-                "id": "leave-request",
-                "label": "Leave Requests",
-                "url": "/dashboard/leave-request"
-            },
-            {
-                "id": "calendar",
-                "label": "Calendar",
-                "url": "/dashboard/calendar"
-            },
-            {
-                "id": "media",
-                "label": "Media",
-                "url": "/dashboard/media"
+                "id": "system-user",
+                "label": "System Users",
+                "url": "/dashboard/system-user"
             },
             {
                 "id": "role-permission",
@@ -111,21 +173,6 @@
                         "url": "/dashboard/permission-matrix"
                     }
                 ]
-            }
-        ]
-    },
-    {
-        "id": "administration",
-        "label": "Administration",
-        "icon": "security",
-        "url": null,
-        "systemAdminOnly": true,
-        "initiallyOpen": false,
-        "children": [
-            {
-                "id": "system-user",
-                "label": "System Users",
-                "url": "/dashboard/system-user"
             }
         ]
     }

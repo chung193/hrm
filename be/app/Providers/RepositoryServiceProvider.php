@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Repositories\Asset\Concretes\AssetRepository;
+use App\Repositories\Asset\Contracts\AssetRepositoryInterface;
+use App\Repositories\AssetAssignment\Concretes\AssetAssignmentRepository;
+use App\Repositories\AssetAssignment\Contracts\AssetAssignmentRepositoryInterface;
+use App\Repositories\AssetAudit\Concretes\AssetAuditRepository;
+use App\Repositories\AssetAudit\Contracts\AssetAuditRepositoryInterface;
+use App\Repositories\AssetCategory\Concretes\AssetCategoryRepository;
+use App\Repositories\AssetCategory\Contracts\AssetCategoryRepositoryInterface;
+use App\Repositories\AssetMaintenance\Concretes\AssetMaintenanceRepository;
+use App\Repositories\AssetMaintenance\Contracts\AssetMaintenanceRepositoryInterface;
 use App\Repositories\ContractType\Concretes\ContractTypeRepository;
 use App\Repositories\ContractType\Contracts\ContractTypeRepositoryInterface;
 use App\Repositories\Department\Concretes\DepartmentRepository;
@@ -88,6 +98,31 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             PermissionRepositoryInterface::class,
             PermissionRepository::class,
+        );
+
+        $this->app->bind(
+            AssetCategoryRepositoryInterface::class,
+            AssetCategoryRepository::class,
+        );
+
+        $this->app->bind(
+            AssetRepositoryInterface::class,
+            AssetRepository::class,
+        );
+
+        $this->app->bind(
+            AssetAssignmentRepositoryInterface::class,
+            AssetAssignmentRepository::class,
+        );
+
+        $this->app->bind(
+            AssetMaintenanceRepositoryInterface::class,
+            AssetMaintenanceRepository::class,
+        );
+
+        $this->app->bind(
+            AssetAuditRepositoryInterface::class,
+            AssetAuditRepository::class,
         );
     }
 

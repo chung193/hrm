@@ -34,7 +34,7 @@ export default function MenuItem({
     const { pathname } = useLocation();
     const isChild = level > 0;
 
-    const paddingLeft = isCollapsed ? 1 : 1.5 + level * 1.8;
+    const paddingLeft = isCollapsed ? 1 : 1.5 + level * 1.6;
     const isSelected = useMemo(
         () => isPathActive(item, pathname) || hasActiveDescendant(item.children, pathname),
         [item, pathname]
@@ -80,14 +80,15 @@ export default function MenuItem({
                 pr: isCollapsed ? 1.5 : 1.5,
                 justifyContent: isCollapsed ? 'center' : 'flex-start',
                 borderRadius: 0,
-                color: isSelected ? 'common.white' : 'rgba(255, 255, 255, 0.75)',
+                color: isSelected
+                    ? 'common.white' : 'rgba(255, 255, 255, 0.75)',
                 backgroundColor: isSelected ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                 fontWeight: isSelected ? 600 : 500,
                 fontSize: '0.9375rem',
                 transition: 'all .25s cubic-bezier(0.4, 0, 0.2, 1)',
                 position: 'relative',
                 borderLeft: isSelected ? '3px solid currentColor' : '3px solid transparent',
-                paddingLeft: isCollapsed ? 1.5 : 'calc(1.5rem - 3px)',
+                paddingLeft: isCollapsed ? 1.5 : `calc(${paddingLeft}rem - 3px)`,
                 '&:hover': {
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     color: 'common.white',

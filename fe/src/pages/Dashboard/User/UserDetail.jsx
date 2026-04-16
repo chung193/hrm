@@ -22,12 +22,12 @@ export default function UserDetail({ id, scopeMode = 'organization' }) {
             </Box>
 
             <Grid container spacing={2}>
-                <Grid size={3}>
+                <Grid size={{ xs: 12, lg: 4 }}>
                     <MainCard showBreadcrumb={false} sx={{ pt: 0, pr: 0 }}>
                         <UserInfo id={id} scopeMode={scopeMode} />
                     </MainCard>
                 </Grid>
-                <Grid size={9}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                     <MainCard showBreadcrumb={false} sx={{ pt: 0, pl: 0 }}>
                         <Tabs
                             value={tab}
@@ -43,7 +43,7 @@ export default function UserDetail({ id, scopeMode = 'organization' }) {
                         </CustomTabPanel>
 
                         <CustomTabPanel value={tab} index={1}>
-                            <UserChangePasswordTab id={id} />
+                            <UserChangePasswordTab id={id} scopeMode={scopeMode} />
                         </CustomTabPanel>
                     </MainCard >
                 </Grid>

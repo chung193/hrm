@@ -1,6 +1,12 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\AssetAssignmentController;
+use App\Http\Controllers\Api\V1\AssetAuditController;
+use App\Http\Controllers\Api\V1\AssetCategoryController;
+use App\Http\Controllers\Api\V1\AssetController;
+use App\Http\Controllers\Api\V1\AssetMaintenanceController;
+use App\Http\Controllers\Api\V1\AssetReportController;
 use App\Http\Controllers\Api\V1\ContractTypeController;
 use App\Http\Controllers\Api\V1\DepartmentController;
 use App\Http\Controllers\Api\V1\DepartmentTitleController;
@@ -61,6 +67,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Statistics routes
     Route::get('/statistics/dashboard', [StatisticsController::class, 'dashboard'])->name('statistics.dashboard');
     Route::get('/statistics/monthly-trends', [StatisticsController::class, 'monthlyTrends'])->name('statistics.monthly-trends');
+    Route::get('/statistics/assets/overview', [AssetReportController::class, 'overview'])->name('statistics.assets.overview');
+    Route::post('/statistics/assets/export', [AssetReportController::class, 'export'])->name('statistics.assets.export');
 
     Route::get('users/active', [UserController::class, 'active'])->name('users.active');
     Route::get('users/all', [UserController::class, 'all'])->name('users.all');
@@ -73,6 +81,7 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResource('admin-user', SystemUserController::class)->parameters(['admin-user' => 'user'])->names('admin_users');
     Route::delete('admin-users', [SystemUserController::class, 'bulkDestroy'])->name('admin_users.bulk_destroy');
     Route::post('/admin-user/{user}/role', [SystemUserController::class, 'assignRoles'])->name('admin_user.assign_roles');
+    Route::patch('/admin-user/{user}/password', [SystemUserController::class, 'resetPassword'])->name('admin_user.reset_password');
     Route::post('/admin-user-export', [SystemUserController::class, 'export'])->name('admin_users.export');
 
     Route::post('/media/upload', [UploadFileController::class, 'upload']);
@@ -131,4 +140,41 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/permission-export', [PermissionController::class, 'export'])->name('permissions.export');
     Route::apiResource('permission', PermissionController::class)->names('permissions');
     Route::delete('permissions', [PermissionController::class, 'bulkDestroy'])->name('permissions.bulk_destroy');
+
+    Route::get('asset-category/all', [AssetCategoryController::class, 'all'])->name('asset_categories.all');
+    Route::get('asset-category/active', [AssetCategoryController::class, 'active'])->name('asset_categories.active');
+    Route::apiResource('asset-category', AssetCategoryController::class)
+        ->parameters(['asset-category' => 'asset_category'])
+        ->names('asset_categories');
+    Route::delete('asset-categories', [AssetCategoryController::class, 'bulkDestroy'])->name('asset_categories.bulk_destroy');
+
+    Route::get('asset/all', [AssetController::class, 'all'])->name('assets.all');
+    Route::get('asset/active', [AssetController::class, 'active'])->name('assets.active');
+    Route::post('asset-export', [AssetController::class, 'export'])->name('assets.export');
+    Route::patch('asset/{asset}/gallery-order', [AssetController::class, 'reorderGallery'])->name('assets.gallery_order');
+    Route::patch('asset/{asset}/primary-image', [AssetController::class, 'setPrimaryImage'])->name('assets.primary_image');
+    Route::apiResource('asset', AssetController::class)->names('assets');
+    Route::delete('assets', [AssetController::class, 'bulkDestroy'])->name('assets.bulk_destroy');
+
+    Route::get('asset-assignment/all', [AssetAssignmentController::class, 'all'])->name('asset_assignments.all');
+    Route::get('asset-assignment/active', [AssetAssignmentController::class, 'active'])->name('asset_assignments.active');
+    Route::patch('asset-assignment/{asset_assignment}/return', [AssetAssignmentController::class, 'returnAsset'])->name('asset_assignments.return');
+    Route::apiResource('asset-assignment', AssetAssignmentController::class)
+        ->parameters(['asset-assignment' => 'asset_assignment'])
+        ->names('asset_assignments');
+    Route::delete('asset-assignments', [AssetAssignmentController::class, 'bulkDestroy'])->name('asset_assignments.bulk_destroy');
+
+    Route::get('asset-maintenance/all', [AssetMaintenanceController::class, 'all'])->name('asset_maintenances.all');
+    Route::get('asset-maintenance/active', [AssetMaintenanceController::class, 'active'])->name('asset_maintenances.active');
+    Route::apiResource('asset-maintenance', AssetMaintenanceController::class)
+        ->parameters(['asset-maintenance' => 'asset_maintenance'])
+        ->names('asset_maintenances');
+    Route::delete('asset-maintenances', [AssetMaintenanceController::class, 'bulkDestroy'])->name('asset_maintenances.bulk_destroy');
+
+    Route::get('asset-audit/all', [AssetAuditController::class, 'all'])->name('asset_audits.all');
+    Route::get('asset-audit/active', [AssetAuditController::class, 'active'])->name('asset_audits.active');
+    Route::apiResource('asset-audit', AssetAuditController::class)
+        ->parameters(['asset-audit' => 'asset_audit'])
+        ->names('asset_audits');
+    Route::delete('asset-audits', [AssetAuditController::class, 'bulkDestroy'])->name('asset_audits.bulk_destroy');
 });

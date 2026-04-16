@@ -165,6 +165,7 @@ const Permission = () => {
             pageTitle={t('pages.permission.title')}
             pageDescription={t('pages.permission.description')}
             breadcrumbs={breadcrumbs}
+            totalCount={rowCount}
         >
             <MetaData
                 title="Role Management"
@@ -226,3 +227,4 @@ const Permission = () => {
 };
 
 export default Permission;
+

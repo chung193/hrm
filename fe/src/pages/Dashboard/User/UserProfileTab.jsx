@@ -2,28 +2,54 @@ import {
     Avatar,
     Box,
     Button,
-    Checkbox,
+    Divider,
     FormControl,
-    FormControlLabel,
     Grid,
     IconButton,
     InputLabel,
     MenuItem,
     Select,
+    Stack,
+    Switch,
     TextField,
+    Typography,
 } from '@mui/material';
-import { PhotoCamera } from '@mui/icons-material';
+import { CameraAltOutlined } from '@mui/icons-material';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useGlobalContext } from '@providers/GlobalProvider';
-
 import { show, showSystem, update, updateSystem, uploadAvatar } from './UserServices';
 import { getAllSimple as getOrganizations } from '../Organization/OrganizationServices';
 import { getAllSimple as getDepartments } from '../Department/DepartmentServices';
 import { getAllSimple as getDepartmentTitles } from '../DepartmentTitle/DepartmentTitleServices';
 
+const sectionSx = {
+    p: { xs: 2, md: 3 },
+    border: '1px solid',
+    borderColor: 'divider',
+    borderRadius: 2,
+    bgcolor: 'background.paper',
+};
+
+const organizationFieldSx = {
+    minWidth: { xs: '100%', md: 220 },
+};
+
+const SectionHeader = ({ title, description }) => (
+    <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            {title}
+        </Typography>
+        {description && (
+            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                {description}
+            </Typography>
+        )}
+    </Box>
+);
+
 export default function UserProfileTab({ id, scopeMode = 'organization' }) {
-    const { organizationScope } = useGlobalContext();
+    const { organizationScope, showLoading, hideLoading, showNotification } = useGlobalContext();
     const [preview, setPreview] = useState('');
     const [organizations, setOrganizations] = useState([]);
     const [departments, setDepartments] = useState([]);
@@ -54,6 +80,9 @@ export default function UserProfileTab({ id, scopeMode = 'organization' }) {
 
     const selectedOrgId = useWatch({ control, name: 'organization_id' });
     const selectedDepartmentId = useWatch({ control, name: 'department_id' });
+    const userName = useWatch({ control, name: 'name' });
+    const userEmail = useWatch({ control, name: 'email' });
+    const isActive = useWatch({ control, name: 'is_active' });
     const scopedOrganizationId = organizationScope?.selectedOrganizationId || null;
     const isScoped = scopeMode === 'organization' && Number(scopedOrganizationId || 0) > 0;
     const showFn = scopeMode === 'system' ? showSystem : show;
@@ -129,12 +158,22 @@ export default function UserProfileTab({ id, scopeMode = 'organization' }) {
     const onSubmit = (data) => {
         const payload = {
             ...data,
-            organization_id: isScoped ? scopedOrganizationId : (data.organization_id || null),
+            organization_id: isScoped ? scopedOrganizationId : data.organization_id || null,
             department_id: data.department_id || null,
             department_title_id: data.department_title_id || null,
         };
 
-        updateFn(id, payload).catch(() => {});
+        showLoading();
+        updateFn(id, payload)
+            .then(() => {
+                showNotification('Updated user successfully', 'success');
+            })
+            .catch((err) => {
+                showNotification(err.response?.data?.message || err.response?.data?.error || 'Cannot update user', 'error');
+            })
+            .finally(() => {
+                hideLoading();
+            });
     };
 
     const handleAvatar = (e) => {
@@ -151,296 +190,352 @@ export default function UserProfileTab({ id, scopeMode = 'organization' }) {
         formData.append('model', 'User');
         formData.append('id', id);
         formData.append('collection', 'avatar');
-        uploadAvatar(formData).catch(() => {});
+        uploadAvatar(formData)
+            .then(() => {
+                showNotification('Updated avatar successfully', 'success');
+            })
+            .catch((err) => {
+                showNotification(err.response?.data?.message || err.response?.data?.error || 'Cannot update avatar', 'error');
+            });
     };
 
     return (
-        <Box sx={{ width: '100%' }}>
-            <Box textAlign="center" position="relative" sx={{ mb: 3 }}>
-                <Avatar
-                    src={preview}
-                    sx={{
-                        width: 120,
-                        height: 120,
-                        mx: 'auto',
-                        border: '4px solid #2c3e50',
-                    }}
-                />
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
+            <Box sx={{ ...sectionSx, mb: 3 }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                    <Box sx={{ position: 'relative' }}>
+                        <Avatar
+                            src={preview}
+                            sx={{
+                                width: 88,
+                                height: 88,
+                                bgcolor: 'grey.200',
+                            }}
+                        />
+                        <input hidden id="upload" type="file" onChange={handleAvatar} />
+                        <label htmlFor="upload">
+                            <IconButton
+                                component="span"
+                                size="small"
+                                sx={{
+                                    position: 'absolute',
+                                    right: -6,
+                                    bottom: -6,
+                                    bgcolor: 'background.paper',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <CameraAltOutlined fontSize="small" />
+                            </IconButton>
+                        </label>
+                    </Box>
 
-                <input hidden id="upload" type="file" onChange={handleAvatar} />
+                    <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {userName || 'Unnamed user'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                            {userEmail || 'No email assigned'}
+                        </Typography>
+                    </Box>
 
-                <label htmlFor="upload">
-                    <IconButton
-                        component="span"
-                        sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: '50%',
-                            transform: 'translateX(25px)',
-                            bgcolor: 'background.paper',
-                        }}
-                    >
-                        <PhotoCamera />
-                    </IconButton>
-                </label>
+                    <Controller
+                        name="is_active"
+                        control={control}
+                        render={({ field }) => (
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    {field.value ? 'Active' : 'Inactive'}
+                                </Typography>
+                                <Switch
+                                    checked={!!field.value}
+                                    onChange={(event) => field.onChange(event.target.checked)}
+                                />
+                            </Stack>
+                        )}
+                    />
+                </Stack>
             </Box>
 
-            <Box sx={{ width: '100%' }} component="form" onSubmit={handleSubmit(onSubmit)}>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="name"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Full Name" fullWidth size="small" />}
-                        />
+            <Stack spacing={3}>
+                <Box sx={sectionSx}>
+                    <SectionHeader
+                        title="Basic Information"
+                        description="Main account information and employee identity."
+                    />
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                            <Controller
+                                name="name"
+                                control={control}
+                                render={({ field }) => <TextField {...field} label="Full Name" fullWidth size="small" />}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <Controller
+                                name="email"
+                                control={control}
+                                render={({ field }) => <TextField {...field} label="Email" fullWidth size="small" />}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <Controller
+                                name="employee_code"
+                                control={control}
+                                render={({ field }) => <TextField {...field} label="Employee Code" fullWidth size="small" />}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <Controller
+                                name="position"
+                                control={control}
+                                render={({ field }) => <TextField {...field} label="Position" fullWidth size="small" />}
+                            />
+                        </Grid>
                     </Grid>
+                </Box>
 
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="email"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Email" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="employee_code"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Employee Code" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Controller
-                            name="is_active"
-                            control={control}
-                            render={({ field }) => (
-                                <FormControlLabel
-                                    label={field.value ? 'Active' : 'Inactive'}
-                                    control={
-                                        <Checkbox
-                                            checked={!!field.value}
-                                            onChange={(event) => field.onChange(event.target.checked)}
-                                        />
-                                    }
+                <Box sx={sectionSx}>
+                    <SectionHeader
+                        title="Organization"
+                        description="Department and title assignment."
+                    />
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} md={4}>
+                            {isScoped ? (
+                                <TextField
+                                    label="Organization"
+                                    fullWidth
+                                    size="small"
+                                    sx={organizationFieldSx}
+                                    value={organizations.find((org) => Number(org.id) === Number(scopedOrganizationId))?.name || ''}
+                                    disabled
+                                />
+                            ) : (
+                                <Controller
+                                    name="organization_id"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <FormControl fullWidth size="small" sx={organizationFieldSx}>
+                                            <InputLabel id="organization-id-label">Organization</InputLabel>
+                                            <Select
+                                                {...field}
+                                                labelId="organization-id-label"
+                                                label="Organization"
+                                                value={field.value || ''}
+                                                onChange={(event) => {
+                                                    field.onChange(event.target.value);
+                                                    setValue('department_id', '');
+                                                    setValue('department_title_id', '');
+                                                }}
+                                            >
+                                                <MenuItem value="">None</MenuItem>
+                                                {organizations.map((organization) => (
+                                                    <MenuItem key={organization.id} value={organization.id}>
+                                                        {organization.name}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    )}
                                 />
                             )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        {isScoped ? (
-                            <TextField
-                                label="Organization"
-                                fullWidth
-                                size="small"
-                                value={
-                                    organizations.find((org) => Number(org.id) === Number(scopedOrganizationId))?.name || ''
-                                }
-                                disabled
-                            />
-                        ) : (
+                        </Grid>
+                        <Grid item xs={12} md={4}>
                             <Controller
-                                name="organization_id"
+                                name="department_id"
                                 control={control}
                                 render={({ field }) => (
-                                    <FormControl fullWidth size="small">
-                                        <InputLabel id="organization-id-label">Organization</InputLabel>
+                                    <FormControl fullWidth size="small" sx={organizationFieldSx}>
+                                        <InputLabel id="department-id-label">Department</InputLabel>
                                         <Select
                                             {...field}
-                                            labelId="organization-id-label"
-                                            label="Organization"
+                                            labelId="department-id-label"
+                                            label="Department"
                                             value={field.value || ''}
                                             onChange={(event) => {
                                                 field.onChange(event.target.value);
-                                                setValue('department_id', '');
                                                 setValue('department_title_id', '');
                                             }}
                                         >
                                             <MenuItem value="">None</MenuItem>
-                                            {organizations.map((organization) => (
-                                                <MenuItem key={organization.id} value={organization.id}>
-                                                    {organization.name}
+                                            {filteredDepartments.map((department) => (
+                                                <MenuItem key={department.id} value={department.id}>
+                                                    {department.name}
                                                 </MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
                                 )}
                             />
-                        )}
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Controller
+                                name="department_title_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <FormControl fullWidth size="small" sx={organizationFieldSx}>
+                                        <InputLabel id="department-title-id-label">Department Title</InputLabel>
+                                        <Select
+                                            {...field}
+                                            labelId="department-title-id-label"
+                                            label="Department Title"
+                                            value={field.value || ''}
+                                        >
+                                            <MenuItem value="">None</MenuItem>
+                                            {filteredTitles.map((title) => (
+                                                <MenuItem key={title.id} value={title.id}>
+                                                    {title.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                            />
+                        </Grid>
                     </Grid>
+                </Box>
 
-                    <Grid item xs={12} md={4}>
-                        <Controller
-                            name="department_id"
-                            control={control}
-                            render={({ field }) => (
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="department-id-label">Department</InputLabel>
-                                    <Select
-                                        {...field}
-                                        labelId="department-id-label"
-                                        label="Department"
-                                        value={field.value || ''}
-                                        onChange={(event) => {
-                                            field.onChange(event.target.value);
-                                            setValue('department_title_id', '');
-                                        }}
-                                    >
-                                        <MenuItem value="">None</MenuItem>
-                                        {filteredDepartments.map((department) => (
-                                            <MenuItem key={department.id} value={department.id}>
-                                                {department.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Controller
-                            name="department_title_id"
-                            control={control}
-                            render={({ field }) => (
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="department-title-id-label">Department Title</InputLabel>
-                                    <Select
-                                        {...field}
-                                        labelId="department-title-id-label"
-                                        label="Department Title"
-                                        value={field.value || ''}
-                                    >
-                                        <MenuItem value="">None</MenuItem>
-                                        {filteredTitles.map((title) => (
-                                            <MenuItem key={title.id} value={title.id}>
-                                                {title.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            )}
-                        />
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                        <Box sx={{ ...sectionSx, height: '100%' }}>
+                            <SectionHeader
+                                title="Contact"
+                                description="Daily contact information."
+                            />
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name="phone"
+                                        control={control}
+                                        render={({ field }) => <TextField {...field} label="Phone" fullWidth size="small" />}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name="address"
+                                        control={control}
+                                        render={({ field }) => <TextField {...field} label="Address" fullWidth size="small" />}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name="city"
+                                        control={control}
+                                        render={({ field }) => <TextField {...field} label="City" fullWidth size="small" />}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
                     </Grid>
 
                     <Grid item xs={12} md={6}>
-                        <Controller
-                            name="phone"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Phone" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="address"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Address" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="city"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="City" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="position"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Position" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Controller
-                            name="join_date"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    label="Join Date"
-                                    type="date"
-                                    fullWidth
-                                    size="small"
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Controller
-                            name="hired_at"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    label="Hired At"
-                                    type="date"
-                                    fullWidth
-                                    size="small"
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={4}>
-                        <Controller
-                            name="birthday"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    {...field}
-                                    label="Birthday"
-                                    type="date"
-                                    fullWidth
-                                    size="small"
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="website"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Website" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                        <Controller
-                            name="github"
-                            control={control}
-                            render={({ field }) => <TextField {...field} label="Github" fullWidth size="small" />}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Controller
-                            name="description"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField {...field} label="Bio" fullWidth size="small" multiline rows={3} />
-                            )}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Button type="submit" variant="contained" size="small" sx={{ minWidth: 150 }}>
-                            Save Changes
-                        </Button>
+                        <Box sx={{ ...sectionSx, height: '100%' }}>
+                            <SectionHeader
+                                title="Dates"
+                                description="Important employment dates."
+                            />
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name="join_date"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                label="Join Date"
+                                                type="date"
+                                                fullWidth
+                                                size="small"
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name="hired_at"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                label="Hired At"
+                                                type="date"
+                                                fullWidth
+                                                size="small"
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Controller
+                                        name="birthday"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <TextField
+                                                {...field}
+                                                label="Birthday"
+                                                type="date"
+                                                fullWidth
+                                                size="small"
+                                                InputLabelProps={{ shrink: true }}
+                                            />
+                                        )}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
                     </Grid>
                 </Grid>
-            </Box>
+
+                <Box sx={sectionSx}>
+                    <SectionHeader
+                        title="Links and Notes"
+                        description="Optional references and internal notes."
+                    />
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                        <Grid item xs={12} md={6}>
+                            <Controller
+                                name="website"
+                                control={control}
+                                render={({ field }) => <TextField {...field} label="Website" fullWidth size="small" />}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <Controller
+                                name="github"
+                                control={control}
+                                render={({ field }) => <TextField {...field} label="GitHub" fullWidth size="small" />}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Controller
+                        name="description"
+                        control={control}
+                        render={({ field }) => (
+                            <TextField {...field} label="Bio" fullWidth size="small" multiline rows={4} />
+                        )}
+                    />
+                </Box>
+
+                <Divider />
+
+                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} spacing={2}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Save when you finish updating the user information.
+                    </Typography>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        size="medium"
+                        sx={{ minWidth: 160, alignSelf: { xs: 'stretch', sm: 'auto' } }}
+                    >
+                        Save Changes
+                    </Button>
+                </Stack>
+            </Stack>
         </Box>
     );
 }

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import MainCard from '@components/MainCard';
 import MetaData from '@components/MetaData';
@@ -149,7 +149,7 @@ const DepartmentTitle = () => {
     };
 
     return (
-        <MainCard breadcrumbs={breadcrumbs}>
+        <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
             <MetaData title='Department Title Management' description='Department title management page' />
 
             <Toolbar
@@ -192,4 +192,5 @@ const DepartmentTitle = () => {
 };
 
 export default DepartmentTitle;
+
 

@@ -11,8 +11,8 @@ export const getAll = async (params = {}) => {
     return response;
 };
 
-export const getAllSimple = async () => {
-    const response = await authInstance.get('department/all');
+export const getAllSimple = async (options = {}) => {
+    const response = await authInstance.get('department/all', options);
     return response;
 };
 

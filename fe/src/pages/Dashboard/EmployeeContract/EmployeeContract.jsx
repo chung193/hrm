@@ -162,7 +162,7 @@ const EmployeeContract = () => {
     };
 
     return (
-        <MainCard breadcrumbs={breadcrumbs}>
+        <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
             <MetaData title='Employee Contract Management' description='Employee contract management page' />
 
             <Toolbar
@@ -208,4 +208,5 @@ const EmployeeContract = () => {
 };
 
 export default EmployeeContract;
+
 

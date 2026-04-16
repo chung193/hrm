@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Services\Concretes\AssetAssignmentService;
+use App\Services\Concretes\AssetAuditService;
+use App\Services\Concretes\AssetCategoryService;
+use App\Services\Concretes\AssetMaintenanceService;
+use App\Services\Concretes\AssetService;
 use App\Services\Concretes\AuthService;
 use App\Services\Concretes\ContractTypeService;
 use App\Services\Concretes\DepartmentService;
@@ -15,6 +20,11 @@ use App\Services\Concretes\RecruitmentSettingService;
 use App\Services\Concretes\RoleService;
 use App\Services\Concretes\UserService;
 use App\Services\Contracts\AuthServiceInterface;
+use App\Services\Contracts\AssetAssignmentServiceInterface;
+use App\Services\Contracts\AssetAuditServiceInterface;
+use App\Services\Contracts\AssetCategoryServiceInterface;
+use App\Services\Contracts\AssetMaintenanceServiceInterface;
+use App\Services\Contracts\AssetServiceInterface;
 use App\Services\Contracts\ContractTypeServiceInterface;
 use App\Services\Contracts\DepartmentServiceInterface;
 use App\Services\Contracts\DepartmentTitleServiceInterface;
@@ -47,6 +57,11 @@ class ServiceClassProvider extends BaseServiceProvider
         $this->app->bind(LeaveRequestServiceInterface::class, LeaveRequestService::class);
         $this->app->bind(RecruitmentSettingServiceInterface::class, RecruitmentSettingService::class);
         $this->app->bind(RecruitmentRequestServiceInterface::class, RecruitmentRequestService::class);
+        $this->app->bind(AssetCategoryServiceInterface::class, AssetCategoryService::class);
+        $this->app->bind(AssetServiceInterface::class, AssetService::class);
+        $this->app->bind(AssetAssignmentServiceInterface::class, AssetAssignmentService::class);
+        $this->app->bind(AssetMaintenanceServiceInterface::class, AssetMaintenanceService::class);
+        $this->app->bind(AssetAuditServiceInterface::class, AssetAuditService::class);
     }
 
     /**

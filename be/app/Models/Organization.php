@@ -23,4 +23,14 @@ class Organization extends Model
     {
         return $this->hasMany(Department::class);
     }
+
+    public function assetCategories()
+    {
+        return $this->hasMany(AssetCategory::class);
+    }
+
+    public function assets()
+    {
+        return $this->hasMany(Asset::class);
+    }
 }

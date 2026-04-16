@@ -121,6 +121,26 @@ class User extends Authenticatable implements JWTSubject, HasMedia, MustVerifyEm
         return $this->hasMany(LeaveRequest::class, 'approver_user_id');
     }
 
+    public function assignedAssets()
+    {
+        return $this->hasMany(Asset::class, 'current_user_id');
+    }
+
+    public function assetAssignments()
+    {
+        return $this->hasMany(AssetAssignment::class);
+    }
+
+    public function assetAssignmentActions()
+    {
+        return $this->hasMany(AssetAssignment::class, 'assigned_by_user_id');
+    }
+
+    public function assetAudits()
+    {
+        return $this->hasMany(AssetAudit::class, 'audited_by_user_id');
+    }
+
     public function sendEmailVerificationNotification()
     {
         $this->notify(new VerifyEmailNotification());

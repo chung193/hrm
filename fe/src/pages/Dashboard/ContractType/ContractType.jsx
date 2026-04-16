@@ -137,7 +137,7 @@ const ContractType = () => {
     };
 
     return (
-        <MainCard breadcrumbs={breadcrumbs}>
+        <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
             <MetaData title='Contract Type Management' description='Contract type management page' />
 
             <Toolbar
@@ -183,4 +183,5 @@ const ContractType = () => {
 };
 
 export default ContractType;
+
 

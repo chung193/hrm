@@ -12,19 +12,37 @@ import {
     Stack,
     Typography,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
-import { assignRoles, assignRolesSystem, getAllRole, show, showSystem } from './UserServices';
+import { assignRoles, assignRolesSystem, destroySystem, getAllRole, show, showSystem, updateSystem } from './UserServices';
 import { useGlobalContext } from '@providers/GlobalProvider';
 import { getMediaUrl } from '@utils/mediaUrl';
 import { getLeaveBalance } from '@pages/Dashboard/LeaveRequest/LeaveRequestServices';
+
+const infoRowSx = {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(110px, 140px) minmax(0, 1fr)',
+    columnGap: 2,
+    alignItems: 'start',
+};
+
+const valueTextSx = {
+    minWidth: 0,
+    whiteSpace: 'normal',
+    overflowWrap: 'anywhere',
+    wordBreak: 'break-word',
+};
 
 const UserInfo = ({ id, scopeMode = 'organization' }) => {
     const [user, setUser] = useState({});
     const [roles, setRoles] = useState([]);
     const [selectedRoleIds, setSelectedRoleIds] = useState([]);
     const [savingRoles, setSavingRoles] = useState(false);
+    const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [deletingUser, setDeletingUser] = useState(false);
     const [leaveBalance, setLeaveBalance] = useState(null);
-    const { showNotification } = useGlobalContext();
+    const navigate = useNavigate();
+    const { showNotification, showConfirm, closeConfirm } = useGlobalContext();
     const isSystemScope = scopeMode === 'system';
     const loadUserFn = isSystemScope ? showSystem : show;
     const assignRolesFn = isSystemScope ? assignRolesSystem : assignRoles;
@@ -84,6 +102,57 @@ const UserInfo = ({ id, scopeMode = 'organization' }) => {
             })
             .finally(() => setSavingRoles(false));
     };
+
+    const handleToggleStatus = () => {
+        if (!isSystemScope) {
+            return;
+        }
+
+        setUpdatingStatus(true);
+
+        updateSystem(id, { is_active: !user.is_active })
+            .then(() => loadUser())
+            .then(() => {
+                showNotification(user.is_active ? 'Locked user successfully' : 'Unlocked user successfully', 'success');
+            })
+            .catch((err) => {
+                showNotification(err.response?.data?.message || 'Cannot update user status', 'error');
+            })
+            .finally(() => setUpdatingStatus(false));
+    };
+
+    const handleDeleteUser = () => {
+        if (!isSystemScope) {
+            return;
+        }
+
+        showConfirm(
+            'Delete user',
+            `Delete user "${user.name || id}" permanently?`,
+            async () => {
+                setDeletingUser(true);
+
+                try {
+                    await destroySystem(id);
+                    closeConfirm();
+                    showNotification('Deleted user successfully', 'success');
+                    navigate('/dashboard/system-user');
+                } catch (err) {
+                    showNotification(err.response?.data?.message || 'Cannot delete user', 'error');
+                } finally {
+                    setDeletingUser(false);
+                }
+            },
+            closeConfirm
+        );
+    };
+
+    const InfoRow = ({ label, value }) => (
+        <Box sx={infoRowSx}>
+            <Typography sx={{ fontWeight: 600 }}>{label}</Typography>
+            <Typography sx={valueTextSx}>{value || '-'}</Typography>
+        </Box>
+    );
 
     return (
         <Box>
@@ -159,94 +228,51 @@ const UserInfo = ({ id, scopeMode = 'organization' }) => {
                 </Button>
             </Stack>
 
+            {isSystemScope && (
+                <>
+                    <Typography sx={{ mb: 2, mt: 3 }} variant="h6">
+                        <strong>Actions</strong>
+                    </Typography>
+
+                    <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
+                        <Button
+                            variant="outlined"
+                            color={user.is_active ? 'warning' : 'success'}
+                            onClick={handleToggleStatus}
+                            disabled={updatingStatus || deletingUser}
+                        >
+                            {user.is_active ? 'Lock account' : 'Unlock account'}
+                        </Button>
+
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={handleDeleteUser}
+                            disabled={deletingUser || updatingStatus}
+                        >
+                            {deletingUser ? 'Deleting...' : 'Delete user'}
+                        </Button>
+                    </Stack>
+                </>
+            )}
+
             <Typography sx={{ mb: 2 }} variant="h6">
                 <strong>Profile</strong>
             </Typography>
 
             <Stack direction="column" spacing={1.5} sx={{ mb: 2 }}>
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Email</strong>
-                    </Typography>
-                    <Typography>{user.email || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Employee Code</strong>
-                    </Typography>
-                    <Typography>{user.detail?.employee_code || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Organization</strong>
-                    </Typography>
-                    <Typography>{user.detail?.organization?.name || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Department</strong>
-                    </Typography>
-                    <Typography>{user.detail?.department?.name || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Title</strong>
-                    </Typography>
-                    <Typography>{user.detail?.department_title?.name || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Github</strong>
-                    </Typography>
-                    <Typography>{user.detail?.github || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Website</strong>
-                    </Typography>
-                    <Typography>{user.detail?.website || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Phone</strong>
-                    </Typography>
-                    <Typography>{user.detail?.phone || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Address</strong>
-                    </Typography>
-                    <Typography>{user.detail?.address || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>City</strong>
-                    </Typography>
-                    <Typography>{user.detail?.city || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Join Date</strong>
-                    </Typography>
-                    <Typography>{user.detail?.join_date || '-'}</Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                    <Typography sx={{ width: 140 }}>
-                        <strong>Hired At</strong>
-                    </Typography>
-                    <Typography>{user.detail?.hired_at || '-'}</Typography>
-                </Stack>
+                <InfoRow label="Email" value={user.email} />
+                <InfoRow label="Employee Code" value={user.detail?.employee_code} />
+                <InfoRow label="Organization" value={user.detail?.organization?.name} />
+                <InfoRow label="Department" value={user.detail?.department?.name} />
+                <InfoRow label="Title" value={user.detail?.department_title?.name} />
+                <InfoRow label="Github" value={user.detail?.github} />
+                <InfoRow label="Website" value={user.detail?.website} />
+                <InfoRow label="Phone" value={user.detail?.phone} />
+                <InfoRow label="Address" value={user.detail?.address} />
+                <InfoRow label="City" value={user.detail?.city} />
+                <InfoRow label="Join Date" value={user.detail?.join_date} />
+                <InfoRow label="Hired At" value={user.detail?.hired_at} />
             </Stack>
 
             <Typography sx={{ mb: 2, mt: 3 }} variant="h6">
@@ -254,40 +280,11 @@ const UserInfo = ({ id, scopeMode = 'organization' }) => {
             </Typography>
             {leaveBalance ? (
                 <Stack direction="column" spacing={1.5} sx={{ mb: 2 }}>
-                    <Stack direction="row" spacing={2}>
-                        <Typography sx={{ width: 140 }}>
-                            <strong>As Of</strong>
-                        </Typography>
-                        <Typography>{leaveBalance.as_of_date || '-'}</Typography>
-                    </Stack>
-
-                    <Stack direction="row" spacing={2}>
-                        <Typography sx={{ width: 140 }}>
-                            <strong>Total Available</strong>
-                        </Typography>
-                        <Typography>{leaveBalance.available_total ?? '-'}</Typography>
-                    </Stack>
-
-                    <Stack direction="row" spacing={2}>
-                        <Typography sx={{ width: 140 }}>
-                            <strong>Current Remaining</strong>
-                        </Typography>
-                        <Typography>{leaveBalance.remaining_current_year ?? '-'}</Typography>
-                    </Stack>
-
-                    <Stack direction="row" spacing={2}>
-                        <Typography sx={{ width: 140 }}>
-                            <strong>Prev Year Available</strong>
-                        </Typography>
-                        <Typography>{leaveBalance.available_previous_year ?? '-'}</Typography>
-                    </Stack>
-
-                    <Stack direction="row" spacing={2}>
-                        <Typography sx={{ width: 140 }}>
-                            <strong>Prev Year Expired</strong>
-                        </Typography>
-                        <Typography>{leaveBalance.expired_previous_year ?? '-'}</Typography>
-                    </Stack>
+                    <InfoRow label="As Of" value={leaveBalance.as_of_date} />
+                    <InfoRow label="Total Available" value={leaveBalance.available_total ?? '-'} />
+                    <InfoRow label="Current Remaining" value={leaveBalance.remaining_current_year ?? '-'} />
+                    <InfoRow label="Prev Year Available" value={leaveBalance.available_previous_year ?? '-'} />
+                    <InfoRow label="Prev Year Expired" value={leaveBalance.expired_previous_year ?? '-'} />
                 </Stack>
             ) : (
                 <Typography variant="body2" sx={{ color: '#7f8c8d', mb: 2 }}>

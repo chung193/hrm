@@ -34,4 +34,9 @@ class Department extends Model
     {
         return $this->hasMany(RecruitmentRequest::class, 'requesting_department_id');
     }
+
+    public function assets()
+    {
+        return $this->hasMany(Asset::class);
+    }
 }

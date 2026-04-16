@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Stack, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box } from '@mui/material';
 import Breadcrumb from './Breadcrumb';
 
 export default function MainCard({
@@ -6,15 +6,16 @@ export default function MainCard({
     sx = {},
     breadcrumbs = [
         {
-            label: "Trang chủ",
-            path: '#'
+            label: 'Trang ch?',
+            path: '#',
         },
         {
-            label: "Thống kê",
-            path: '#'
+            label: 'Th?ng k�',
+            path: '#',
         },
     ],
-    showBreadcrumb = true
+    showBreadcrumb = true,
+    totalCount = null,
 }) {
     return (
         <Box
@@ -22,22 +23,27 @@ export default function MainCard({
                 width: '100%',
                 height: '100%',
                 p: 3,
-                bgcolor: "background.default",
-                ...sx
-            }}>
+                bgcolor: 'background.default',
+                ...sx,
+            }}
+        >
+            {showBreadcrumb && <Breadcrumb breadcrumbs={breadcrumbs} />}
 
-            {showBreadcrumb &&
-                <Breadcrumb breadcrumbs={breadcrumbs} />
-            }
-
-            <Card sx={{
-                minWidth: '100%',
-                borderRadius: 2,
-            }}>
+            <Card
+                sx={{
+                    minWidth: '100%',
+                    borderRadius: 2,
+                }}
+            >
                 <CardContent>
+                    {typeof totalCount === 'number' && (
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                            Total matched records: <strong>{totalCount}</strong>
+                        </Typography>
+                    )}
                     {children}
                 </CardContent>
             </Card>
-        </Box >
+        </Box>
     );
 }

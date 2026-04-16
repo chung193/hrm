@@ -164,6 +164,7 @@ const Media = () => {
             pageTitle={t('pages.media.title')}
             pageDescription={t('pages.media.description')}
             breadcrumbs={breadcrumbs}
+            totalCount={rowCount}
         >
             <MetaData
                 title="Media Management"
@@ -224,3 +225,4 @@ const Media = () => {
 };
 
 export default Media;
+

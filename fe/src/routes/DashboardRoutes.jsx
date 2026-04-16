@@ -10,6 +10,7 @@ import Department from '@pages/Dashboard/Department/Department';
 import DepartmentTitle from '@pages/Dashboard/DepartmentTitle/DepartmentTitle';
 import ContractType from '@pages/Dashboard/ContractType/ContractType';
 import EmployeeContract from '@pages/Dashboard/EmployeeContract/EmployeeContract';
+import AssetManagement from '@pages/Dashboard/AssetManagement/AssetManagement';
 import RecruitmentSettings from '@pages/Dashboard/Recruitment/RecruitmentSettings';
 import RecruitmentRequest from '@pages/Dashboard/Recruitment/RecruitmentRequest';
 import LeaveRequest from '@pages/Dashboard/LeaveRequest/LeaveRequest';
@@ -37,6 +38,7 @@ export const DashboardRoutes = [
             { path: 'department-title', element: <DepartmentTitle /> },
             { path: 'contract-type', element: <ContractType /> },
             { path: 'employee-contract', element: <EmployeeContract /> },
+            { path: 'asset-management', element: <AssetManagement /> },
             { path: 'recruitment-settings', element: <RecruitmentSettings /> },
             { path: 'recruitment-request', element: <RecruitmentRequest /> },
             { path: 'leave-request', element: <LeaveRequest /> },

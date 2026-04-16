@@ -139,18 +139,18 @@ class OrganizationService extends BaseService implements OrganizationServiceInte
         $requestedOrganizationId = (int) request('organization_id', 0);
         $userOrganizationId = (int) ($authUser?->detail?->organization_id ?? 0);
 
+        if ($authUser?->isAdmin()) {
+            return $requestedOrganizationId > 0 ? $requestedOrganizationId : null;
+        }
+
         if ($userOrganizationId > 0) {
-            if ($requestedOrganizationId > 0 && $requestedOrganizationId !== $userOrganizationId && !$authUser?->isAdmin()) {
+            if ($requestedOrganizationId > 0 && $requestedOrganizationId !== $userOrganizationId) {
                 throw ValidationException::withMessages([
                     'organization_id' => 'You cannot access another organization.',
                 ]);
             }
 
             return $requestedOrganizationId > 0 ? $requestedOrganizationId : $userOrganizationId;
-        }
-
-        if ($requestedOrganizationId > 0 && $authUser?->isAdmin()) {
-            return $requestedOrganizationId;
         }
 
         return null;

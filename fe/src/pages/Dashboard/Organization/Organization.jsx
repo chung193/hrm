@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import MainCard from '@components/MainCard';
 import MetaData from '@components/MetaData';
@@ -137,7 +137,7 @@ const Organization = () => {
     };
 
     return (
-        <MainCard breadcrumbs={breadcrumbs}>
+        <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
             <MetaData title='Organization Management' description='Organization management page' />
 
             <Toolbar
@@ -180,4 +180,5 @@ const Organization = () => {
 };
 
 export default Organization;
+
 
