@@ -34,6 +34,7 @@ class ContractTypeRepository extends QueryableRepository implements ContractType
     {
         return [
             AllowedFilter::exact('id'),
+            AllowedFilter::exact('organization_id'),
             AllowedFilter::exact('is_probation'),
             AllowedFilter::exact('is_indefinite'),
             'code',
@@ -47,6 +48,7 @@ class ContractTypeRepository extends QueryableRepository implements ContractType
     {
         return [
             'id',
+            'organization_id',
             'code',
             'name',
             'duration_months',
@@ -60,13 +62,14 @@ class ContractTypeRepository extends QueryableRepository implements ContractType
 
     public function getAllowedIncludes(): array
     {
-        return ['employeeContracts'];
+        return ['organization', 'employeeContracts'];
     }
 
     public function getAllowedFields(): array
     {
         return [
             'id',
+            'organization_id',
             'code',
             'name',
             'duration_months',
@@ -78,4 +81,3 @@ class ContractTypeRepository extends QueryableRepository implements ContractType
         ];
     }
 }
-

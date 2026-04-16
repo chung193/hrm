@@ -10,6 +10,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface UserServiceInterface extends BaseServiceInterface
 {
+    // Organization-scoped user management
     public function getUsers(): Collection;
 
     public function getAllUsers(): Collection;
@@ -26,4 +27,21 @@ interface UserServiceInterface extends BaseServiceInterface
 
     public function deleteUsers(array $ids): int;
     public function getActiveUsers(): Collection;
+
+    // System-wide user management (admin only)
+    public function getAllUsersSystem(): Collection;
+
+    public function getFilteredUsersSystem(?Request $request = null, int $perPage = 15): LengthAwarePaginator;
+
+    public function getUserByIdSystem(int $id): ?Model;
+
+    public function createUserSystem(array $data): Model;
+
+    public function updateUserSystem(int $id, array $data): Model;
+
+    public function deleteUserSystem(int $id): bool;
+
+    public function deleteUsersSystem(array $ids): int;
+
+    public function getActiveUsersSystem(): Collection;
 }

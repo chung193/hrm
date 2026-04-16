@@ -13,21 +13,24 @@ import {
     Typography,
 } from '@mui/material';
 
-import { assignRoles, getAllRole, show } from './UserServices';
+import { assignRoles, assignRolesSystem, getAllRole, show, showSystem } from './UserServices';
 import { useGlobalContext } from '@providers/GlobalProvider';
 import { getMediaUrl } from '@utils/mediaUrl';
 import { getLeaveBalance } from '@pages/Dashboard/LeaveRequest/LeaveRequestServices';
 
-const UserInfo = ({ id }) => {
+const UserInfo = ({ id, scopeMode = 'organization' }) => {
     const [user, setUser] = useState({});
     const [roles, setRoles] = useState([]);
     const [selectedRoleIds, setSelectedRoleIds] = useState([]);
     const [savingRoles, setSavingRoles] = useState(false);
     const [leaveBalance, setLeaveBalance] = useState(null);
     const { showNotification } = useGlobalContext();
+    const isSystemScope = scopeMode === 'system';
+    const loadUserFn = isSystemScope ? showSystem : show;
+    const assignRolesFn = isSystemScope ? assignRolesSystem : assignRoles;
 
     const loadUser = () => {
-        return show(id).then((res) => {
+        return loadUserFn(id).then((res) => {
             const nextUser = res.data.data || {};
             setUser(nextUser);
             setSelectedRoleIds(Array.isArray(nextUser.roles) ? nextUser.roles.map((role) => role.id) : []);
@@ -46,7 +49,7 @@ const UserInfo = ({ id }) => {
             .catch((err) => {
                 showNotification(err.response?.data?.message || 'Cannot load user data', 'error');
             });
-    }, [id]);
+    }, [id, scopeMode]);
 
     useEffect(() => {
         if (!id) {
@@ -69,7 +72,7 @@ const UserInfo = ({ id }) => {
     const handleSaveRoles = () => {
         setSavingRoles(true);
 
-        assignRoles(id, selectedRoleIds)
+        assignRolesFn(id, selectedRoleIds)
             .then((res) => {
                 const nextUser = res.data.data || {};
                 setUser((prev) => ({ ...prev, ...nextUser }));

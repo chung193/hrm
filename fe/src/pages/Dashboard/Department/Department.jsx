@@ -14,7 +14,7 @@ import { getAllSimple as getAllOrganizations } from '@pages/Dashboard/Organizati
 const STORAGE_KEY = 'list-view-options:department';
 
 const Department = () => {
-    const { showLoading, hideLoading, showNotification, openModal, closeModal, showConfirm, closeConfirm } = useGlobalContext();
+    const { showLoading, hideLoading, showNotification, openModal, closeModal, showConfirm, closeConfirm, organizationScope } = useGlobalContext();
     const columns = useMemo(() => getColumns(), []);
     const breadcrumbs = getBreadcrumbs();
 
@@ -106,6 +106,7 @@ const Department = () => {
                 'Add Department',
                 <DepartmentAddModal
                     organizations={organizations}
+                    scopedOrganizationId={organizationScope?.selectedOrganizationId || null}
                     onSubmit={(data) => {
                         showLoading();
                         storage(data)

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\RecruitmentSettingController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\StatisticsController;
+use App\Http\Controllers\Api\V1\SystemUserController;
 use App\Http\Controllers\Api\V1\UploadFileController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -67,6 +68,12 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::delete('users', [UserController::class, 'bulkDestroy'])->name('users.bulk_destroy');
     Route::post('/user/{user}/role', [UserController::class, 'assignRoles'])->name('user.assign_roles');
     Route::post('/user-export', [UserController::class, 'export'])->name('users.export');
+    Route::get('admin-users/active', [SystemUserController::class, 'active'])->name('admin_users.active');
+    Route::get('admin-users/all', [SystemUserController::class, 'all'])->name('admin_users.all');
+    Route::apiResource('admin-user', SystemUserController::class)->parameters(['admin-user' => 'user'])->names('admin_users');
+    Route::delete('admin-users', [SystemUserController::class, 'bulkDestroy'])->name('admin_users.bulk_destroy');
+    Route::post('/admin-user/{user}/role', [SystemUserController::class, 'assignRoles'])->name('admin_user.assign_roles');
+    Route::post('/admin-user-export', [SystemUserController::class, 'export'])->name('admin_users.export');
 
     Route::post('/media/upload', [UploadFileController::class, 'upload']);
     Route::apiResource('media', MediaController::class)->only(['index', 'store', 'update', 'destroy'])->names('media');

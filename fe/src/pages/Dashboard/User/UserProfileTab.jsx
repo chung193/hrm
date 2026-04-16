@@ -15,13 +15,15 @@ import {
 import { PhotoCamera } from '@mui/icons-material';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useGlobalContext } from '@providers/GlobalProvider';
 
-import { show, update, uploadAvatar } from './UserServices';
+import { show, showSystem, update, updateSystem, uploadAvatar } from './UserServices';
 import { getAllSimple as getOrganizations } from '../Organization/OrganizationServices';
 import { getAllSimple as getDepartments } from '../Department/DepartmentServices';
 import { getAllSimple as getDepartmentTitles } from '../DepartmentTitle/DepartmentTitleServices';
 
-export default function UserProfileTab({ id }) {
+export default function UserProfileTab({ id, scopeMode = 'organization' }) {
+    const { organizationScope } = useGlobalContext();
     const [preview, setPreview] = useState('');
     const [organizations, setOrganizations] = useState([]);
     const [departments, setDepartments] = useState([]);
@@ -52,6 +54,10 @@ export default function UserProfileTab({ id }) {
 
     const selectedOrgId = useWatch({ control, name: 'organization_id' });
     const selectedDepartmentId = useWatch({ control, name: 'department_id' });
+    const scopedOrganizationId = organizationScope?.selectedOrganizationId || null;
+    const isScoped = scopeMode === 'organization' && Number(scopedOrganizationId || 0) > 0;
+    const showFn = scopeMode === 'system' ? showSystem : show;
+    const updateFn = scopeMode === 'system' ? updateSystem : update;
 
     useEffect(() => {
         Promise.all([getOrganizations(), getDepartments(), getDepartmentTitles()])
@@ -64,11 +70,17 @@ export default function UserProfileTab({ id }) {
     }, []);
 
     useEffect(() => {
+        if (isScoped && Number(selectedOrgId || 0) !== Number(scopedOrganizationId)) {
+            setValue('organization_id', scopedOrganizationId);
+        }
+    }, [isScoped, scopedOrganizationId, selectedOrgId, setValue]);
+
+    useEffect(() => {
         if (!id) {
             return;
         }
 
-        show(id).then((res) => {
+        showFn(id).then((res) => {
             const u = res.data.data || {};
             const detail = u.detail || {};
 
@@ -96,7 +108,7 @@ export default function UserProfileTab({ id }) {
                 setPreview(u.avatar);
             }
         });
-    }, [id, reset]);
+    }, [id, reset, scopeMode]);
 
     const filteredDepartments = useMemo(() => {
         if (!selectedOrgId) {
@@ -117,12 +129,12 @@ export default function UserProfileTab({ id }) {
     const onSubmit = (data) => {
         const payload = {
             ...data,
-            organization_id: data.organization_id || null,
+            organization_id: isScoped ? scopedOrganizationId : (data.organization_id || null),
             department_id: data.department_id || null,
             department_title_id: data.department_title_id || null,
         };
 
-        update(id, payload).catch(() => {});
+        updateFn(id, payload).catch(() => {});
     };
 
     const handleAvatar = (e) => {
@@ -218,33 +230,45 @@ export default function UserProfileTab({ id }) {
                     </Grid>
 
                     <Grid item xs={12} md={4}>
-                        <Controller
-                            name="organization_id"
-                            control={control}
-                            render={({ field }) => (
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="organization-id-label">Organization</InputLabel>
-                                    <Select
-                                        {...field}
-                                        labelId="organization-id-label"
-                                        label="Organization"
-                                        value={field.value || ''}
-                                        onChange={(event) => {
-                                            field.onChange(event.target.value);
-                                            setValue('department_id', '');
-                                            setValue('department_title_id', '');
-                                        }}
-                                    >
-                                        <MenuItem value="">None</MenuItem>
-                                        {organizations.map((organization) => (
-                                            <MenuItem key={organization.id} value={organization.id}>
-                                                {organization.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            )}
-                        />
+                        {isScoped ? (
+                            <TextField
+                                label="Organization"
+                                fullWidth
+                                size="small"
+                                value={
+                                    organizations.find((org) => Number(org.id) === Number(scopedOrganizationId))?.name || ''
+                                }
+                                disabled
+                            />
+                        ) : (
+                            <Controller
+                                name="organization_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <FormControl fullWidth size="small">
+                                        <InputLabel id="organization-id-label">Organization</InputLabel>
+                                        <Select
+                                            {...field}
+                                            labelId="organization-id-label"
+                                            label="Organization"
+                                            value={field.value || ''}
+                                            onChange={(event) => {
+                                                field.onChange(event.target.value);
+                                                setValue('department_id', '');
+                                                setValue('department_title_id', '');
+                                            }}
+                                        >
+                                            <MenuItem value="">None</MenuItem>
+                                            {organizations.map((organization) => (
+                                                <MenuItem key={organization.id} value={organization.id}>
+                                                    {organization.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                            />
+                        )}
                     </Grid>
 
                     <Grid item xs={12} md={4}>

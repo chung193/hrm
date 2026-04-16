@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ContractType;
+use App\Models\Organization;
 use Illuminate\Database\Seeder;
 
 class ContractTypeSeeder extends Seeder
@@ -55,9 +56,15 @@ class ContractTypeSeeder extends Seeder
             ],
         ];
 
-        foreach ($items as $item) {
-            ContractType::query()->updateOrCreate(['code' => $item['code']], $item);
+        $organizationIds = Organization::query()->pluck('id');
+
+        foreach ($organizationIds as $organizationId) {
+            foreach ($items as $item) {
+                ContractType::query()->updateOrCreate(
+                    ['organization_id' => $organizationId, 'code' => $item['code']],
+                    array_merge(['organization_id' => $organizationId], $item)
+                );
+            }
         }
     }
 }
-

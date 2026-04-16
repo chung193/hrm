@@ -1,10 +1,10 @@
-export const getBreadcrumbs = (t) => [
+export const getBreadcrumbs = (t, scopeMode = 'organization') => [
     {
         label: t('home'),
         path: '#',
     },
     {
-        label: t('pages.user.title'),
+        label: scopeMode === 'system' ? 'System Users' : t('pages.user.title'),
         path: '#',
     },
 ];

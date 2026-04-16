@@ -3,13 +3,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, MenuItem, Stack, TextField } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { useGlobalContext } from '@providers/GlobalProvider';
 import { userSchema } from './UserSchema';
 import { getAllSimple as getOrganizations } from '../Organization/OrganizationServices';
 import { getAllSimple as getDepartments } from '../Department/DepartmentServices';
 import { getAllSimple as getDepartmentTitles } from '../DepartmentTitle/DepartmentTitleServices';
 
-const UserAdd = ({ onSubmit, onClose }) => {
+const UserAdd = ({ onSubmit, onClose, scopeMode = 'organization' }) => {
     const { t } = useTranslation('dashboard');
+    const { organizationScope } = useGlobalContext();
     const [organizations, setOrganizations] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [titles, setTitles] = useState([]);
@@ -36,6 +38,8 @@ const UserAdd = ({ onSubmit, onClose }) => {
 
     const selectedOrganizationId = watch('organization_id');
     const selectedDepartmentId = watch('department_id');
+    const scopedOrganizationId = organizationScope?.selectedOrganizationId || null;
+    const isScoped = scopeMode === 'organization' && Number(scopedOrganizationId || 0) > 0;
 
     useEffect(() => {
         Promise.all([getOrganizations(), getDepartments(), getDepartmentTitles()])
@@ -46,6 +50,12 @@ const UserAdd = ({ onSubmit, onClose }) => {
             })
             .catch(() => {});
     }, []);
+
+    useEffect(() => {
+        if (isScoped) {
+            setValue('organization_id', String(scopedOrganizationId));
+        }
+    }, [isScoped, scopedOrganizationId, setValue]);
 
     const filteredDepartments = useMemo(() => {
         if (!selectedOrganizationId) {
@@ -66,7 +76,9 @@ const UserAdd = ({ onSubmit, onClose }) => {
     const submitHandler = (data) => {
         onSubmit({
             ...data,
-            organization_id: data.organization_id ? Number(data.organization_id) : null,
+            organization_id: isScoped
+                ? Number(scopedOrganizationId)
+                : (data.organization_id ? Number(data.organization_id) : null),
             department_id: data.department_id ? Number(data.department_id) : null,
             department_title_id: data.department_title_id ? Number(data.department_title_id) : null,
             employee_code: data.employee_code || null,
@@ -103,27 +115,39 @@ const UserAdd = ({ onSubmit, onClose }) => {
                     helperText={errors.employee_code?.message}
                 />
 
-                <TextField
-                    select
-                    label="Organization"
-                    fullWidth
-                    size="small"
-                    {...register('organization_id')}
-                    onChange={(event) => {
-                        setValue('organization_id', event.target.value);
-                        setValue('department_id', '');
-                        setValue('department_title_id', '');
-                    }}
-                    error={!!errors.organization_id}
-                    helperText={errors.organization_id?.message}
-                >
-                    <MenuItem value="">None</MenuItem>
-                    {organizations.map((organization) => (
-                        <MenuItem key={organization.id} value={organization.id}>
-                            {organization.name}
-                        </MenuItem>
-                    ))}
-                </TextField>
+                {isScoped ? (
+                    <TextField
+                        label="Organization"
+                        fullWidth
+                        size="small"
+                        value={
+                            organizations.find((org) => Number(org.id) === Number(scopedOrganizationId))?.name || ''
+                        }
+                        disabled
+                    />
+                ) : (
+                    <TextField
+                        select
+                        label="Organization"
+                        fullWidth
+                        size="small"
+                        {...register('organization_id')}
+                        onChange={(event) => {
+                            setValue('organization_id', event.target.value);
+                            setValue('department_id', '');
+                            setValue('department_title_id', '');
+                        }}
+                        error={!!errors.organization_id}
+                        helperText={errors.organization_id?.message}
+                    >
+                        <MenuItem value="">None</MenuItem>
+                        {organizations.map((organization) => (
+                            <MenuItem key={organization.id} value={organization.id}>
+                                {organization.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                )}
 
                 <TextField
                     select

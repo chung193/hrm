@@ -30,7 +30,8 @@ export const DashboardRoutes = [
         element: <DashboardLayout />,
         children: [
             { index: true, element: <Home /> },
-            { path: 'user', element: <User /> },
+            { path: 'user', element: <User scopeMode='organization' /> },
+            { path: 'system-user', element: <User scopeMode='system' /> },
             { path: 'organization', element: <Organization /> },
             { path: 'department', element: <Department /> },
             { path: 'department-title', element: <DepartmentTitle /> },

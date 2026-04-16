@@ -15,7 +15,7 @@ const getColumns = () => [
             return page * pageSize + indexInPage;
         },
     },
-    { field: 'organization_id', headerName: 'Org ID', width: 100, editable: true, type: 'number' },
+    { field: 'organization_id', headerName: 'Org ID', width: 100, editable: false, type: 'number' },
     {
         field: 'organization_name',
         headerName: 'Organization',

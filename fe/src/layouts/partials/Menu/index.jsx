@@ -3,6 +3,7 @@ import List from '@mui/material/List';
 import ListSubheader from '@mui/material/ListSubheader';
 import { BarChart, Security, Apps } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useGlobalContext } from '@providers/GlobalProvider';
 import MenuItem from './MenuItem';
 import menu from './menuItem.json';
 
@@ -20,6 +21,25 @@ export default function Menu({
     sx = {},
     onNavigate,
 }) {
+    const { organizationScope } = useGlobalContext();
+    const roleNames = Array.isArray(organizationScope?.profile?.roles)
+        ? organizationScope.profile.roles.map((role) => String(role?.name || '').toLowerCase())
+        : [];
+    const isSystemAdmin = roleNames.some((name) => ['admin', 'super-admin', 'super admin'].includes(name));
+
+    const visibleItems = useMemo(() => {
+        const filterItems = (list) =>
+            list
+                .filter((item) => !item.systemAdminOnly || isSystemAdmin)
+                .map((item) => ({
+                    ...item,
+                    children: Array.isArray(item.children) ? filterItems(item.children) : item.children,
+                }))
+                .filter((item) => !Array.isArray(item.children) || item.children.length > 0 || item.url);
+
+        return filterItems(items);
+    }, [items, isSystemAdmin]);
+
     const routerNavigate = useNavigate();
 
     const initialOpen = useMemo(() => {
@@ -30,9 +50,9 @@ export default function Menu({
                 if (Array.isArray(it.children)) walk(it.children);
             });
         };
-        walk(items);
+        walk(visibleItems);
         return map;
-    }, [items]);
+    }, [visibleItems]);
 
     const [openMap, setOpenMap] = useState(initialOpen);
 
@@ -80,7 +100,7 @@ export default function Menu({
                 ) : null
             }
         >
-            {items.map((item) => (
+            {visibleItems.map((item) => (
                 <MenuItem
                     key={item.id}
                     item={item}
@@ -89,7 +109,7 @@ export default function Menu({
                     setOpenMap={setOpenMap}
                     onNavigate={handleNavigate}
                     renderIcon={renderIcon}
-                    siblings={items}
+                    siblings={visibleItems}
                 />
             ))}
         </List>

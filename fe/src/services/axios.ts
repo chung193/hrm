@@ -31,10 +31,10 @@ authInstance.interceptors.request.use(
 
         const url = String(config.url || '').replace(/^\//, '');
         const isAuthEndpoint = url.startsWith('auth/');
-        const isOrganizationEndpoint = url === 'organization' || url.startsWith('organization/');
+        const skipOrganizationScope = Boolean((config as any).skipOrganizationScope);
 
         const scopeId = Number(localStorage.getItem(ORGANIZATION_SCOPE_STORAGE_KEY) || 0);
-        if (!isAuthEndpoint && !isOrganizationEndpoint && scopeId > 0) {
+        if (!isAuthEndpoint && !skipOrganizationScope && scopeId > 0) {
             config.params = config.params || {};
             if (config.params.organization_id === undefined || config.params.organization_id === null || config.params.organization_id === '') {
                 config.params.organization_id = scopeId;

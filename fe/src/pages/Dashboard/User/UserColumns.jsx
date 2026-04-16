@@ -33,7 +33,7 @@ const getColumns = (t) => [
                         />
 
                         <Typography>
-                            <a href={`user?id=${params.row.id}`}>
+                            <a href={`?id=${params.row.id}`}>
                                 <strong>{params.value}</strong>
                             </a>
                         </Typography>

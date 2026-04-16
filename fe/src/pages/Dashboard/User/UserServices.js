@@ -70,3 +70,61 @@ export const userExport = async () => {
     })
     return response
 }
+
+export const getAllSystem = async (params = {}) => {
+    const sortParam = params.sort || '-created_at';
+    const response = await authInstance.get('admin-user', {
+        skipOrganizationScope: true,
+        params: {
+            sort: sortParam,
+            ...params,
+        },
+    });
+    return response;
+};
+
+export const showSystem = async (id) => {
+    const response = await authInstance.get(`admin-user/${id}`, { skipOrganizationScope: true });
+    return response;
+};
+
+export const getAllSimpleSystem = async () => {
+    const response = await authInstance.get('admin-users/all', { skipOrganizationScope: true });
+    return response;
+};
+
+export const storageSystem = async (data) => {
+    const response = await authInstance.post('admin-user', data, { skipOrganizationScope: true });
+    return response;
+};
+
+export const updateSystem = async (id, data) => {
+    const response = await authInstance.put(`admin-user/${id}`, data, { skipOrganizationScope: true });
+    return response;
+};
+
+export const assignRolesSystem = async (id, roleIds = []) => {
+    const response = await authInstance.post(`admin-user/${id}/role`, { role_ids: roleIds }, { skipOrganizationScope: true });
+    return response;
+};
+
+export const destroySystem = async (id) => {
+    const response = await authInstance.delete(`admin-user/${id}`, { skipOrganizationScope: true });
+    return response;
+};
+
+export const bulkDestroySystem = async (ids) => {
+    const response = await authInstance.delete('admin-users', { data: { ids }, skipOrganizationScope: true });
+    return response;
+};
+
+export const userExportSystem = async () => {
+    const response = await authInstance.post('/admin-user-export', {}, {
+        skipOrganizationScope: true,
+        headers: {
+            Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+        responseType: 'blob',
+    });
+    return response;
+};

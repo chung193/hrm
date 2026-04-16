@@ -113,5 +113,20 @@
                 ]
             }
         ]
+    },
+    {
+        "id": "administration",
+        "label": "Administration",
+        "icon": "security",
+        "url": null,
+        "systemAdminOnly": true,
+        "initiallyOpen": false,
+        "children": [
+            {
+                "id": "system-user",
+                "label": "System Users",
+                "url": "/dashboard/system-user"
+            }
+        ]
     }
 ]

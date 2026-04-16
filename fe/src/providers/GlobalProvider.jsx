@@ -123,7 +123,7 @@ const GlobalProvider = ({ children }) => {
             let selectedOrganizationId = ownOrganizationId;
 
             if (canSwitchOrganization) {
-                const orgRes = await authInstance.get('organization/all');
+                const orgRes = await authInstance.get('organization/all', { skipOrganizationScope: true });
                 organizations = orgRes?.data?.data || [];
 
                 const storedScopeId = Number(localStorage.getItem(ORGANIZATION_SCOPE_STORAGE_KEY) || 0);

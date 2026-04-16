@@ -11,6 +11,7 @@ class ContractTypeResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'organization_id' => $this->organization_id,
             'code' => $this->code,
             'name' => $this->name,
             'duration_months' => $this->duration_months,
@@ -22,4 +23,3 @@ class ContractTypeResource extends JsonResource
         ];
     }
 }
-

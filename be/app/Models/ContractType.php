@@ -10,6 +10,7 @@ class ContractType extends Model
     use HasFactory;
 
     protected $fillable = [
+        'organization_id',
         'code',
         'name',
         'duration_months',
@@ -29,5 +30,9 @@ class ContractType extends Model
     {
         return $this->hasMany(EmployeeContract::class);
     }
-}
 
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
+}

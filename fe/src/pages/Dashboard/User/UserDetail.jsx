@@ -10,10 +10,10 @@ import MainCard from '@components/MainCard';
 import Breadcrumb from '@components/Breadcrumb';
 import UserInfo from './UserInfo'
 
-export default function UserDetail({ id }) {
+export default function UserDetail({ id, scopeMode = 'organization' }) {
     const { t } = useTranslation('dashboard');
     const [tab, setTab] = useState(0);
-    const breadcrumbs = getBreadcrumbs(t);
+    const breadcrumbs = getBreadcrumbs(t, scopeMode);
 
     return (
         <Box sx={{ width: '100%' }}>
@@ -24,7 +24,7 @@ export default function UserDetail({ id }) {
             <Grid container spacing={2}>
                 <Grid size={3}>
                     <MainCard showBreadcrumb={false} sx={{ pt: 0, pr: 0 }}>
-                        <UserInfo id={id} />
+                        <UserInfo id={id} scopeMode={scopeMode} />
                     </MainCard>
                 </Grid>
                 <Grid size={9}>
@@ -39,7 +39,7 @@ export default function UserDetail({ id }) {
                         </Tabs>
 
                         <CustomTabPanel value={tab} index={0}>
-                            <UserProfileTab id={id} />
+                            <UserProfileTab id={id} scopeMode={scopeMode} />
                         </CustomTabPanel>
 
                         <CustomTabPanel value={tab} index={1}>
