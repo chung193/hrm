@@ -2,30 +2,29 @@
 
 namespace App\Providers;
 
-use App\Models\Role;
-use App\Services\Client\Concretes\CategoryService as ClientCategoryService;
-use App\Services\Client\Concretes\CommentService as ClientCommentService;
-use App\Services\Client\Concretes\PostService as ClientPostService;
-use App\Services\Client\Contracts\CategoryServiceInterface as ClientCategoryServiceInterface;
-use App\Services\Client\Contracts\CommentServiceInterface as ClientCommentServiceInterface;
-use App\Services\Client\Contracts\PostServiceInterface as ClientPostServiceInterface;
 use App\Services\Concretes\AuthService;
-use App\Services\Concretes\CategoryService;
-use App\Services\Concretes\CommentService;
-use App\Services\Concretes\PageService;
+use App\Services\Concretes\ContractTypeService;
+use App\Services\Concretes\DepartmentService;
+use App\Services\Concretes\DepartmentTitleService;
+use App\Services\Concretes\EmployeeContractService;
+use App\Services\Concretes\LeaveRequestService;
+use App\Services\Concretes\OrganizationService;
 use App\Services\Concretes\PermissionService;
-use App\Services\Concretes\PostService;
+use App\Services\Concretes\RecruitmentRequestService;
+use App\Services\Concretes\RecruitmentSettingService;
 use App\Services\Concretes\RoleService;
-use App\Services\Concretes\TagService;
 use App\Services\Concretes\UserService;
 use App\Services\Contracts\AuthServiceInterface;
-use App\Services\Contracts\CategoryServiceInterface;
-use App\Services\Contracts\CommentServiceInterface;
-use App\Services\Contracts\PageServiceInterface;
+use App\Services\Contracts\ContractTypeServiceInterface;
+use App\Services\Contracts\DepartmentServiceInterface;
+use App\Services\Contracts\DepartmentTitleServiceInterface;
+use App\Services\Contracts\EmployeeContractServiceInterface;
+use App\Services\Contracts\LeaveRequestServiceInterface;
+use App\Services\Contracts\OrganizationServiceInterface;
 use App\Services\Contracts\PermissionServiceInterface;
-use App\Services\Contracts\PostServiceInterface;
+use App\Services\Contracts\RecruitmentRequestServiceInterface;
+use App\Services\Contracts\RecruitmentSettingServiceInterface;
 use App\Services\Contracts\RoleServiceInterface;
-use App\Services\Contracts\TagServiceInterface;
 use App\Services\Contracts\UserServiceInterface;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
@@ -36,21 +35,18 @@ class ServiceClassProvider extends BaseServiceProvider
      */
     public function register(): void
     {
-        // Client
-        $this->app->bind(ClientCategoryServiceInterface::class, ClientCategoryService::class);
-        $this->app->bind(ClientPostServiceInterface::class, ClientPostService::class);
-        $this->app->bind(ClientCommentServiceInterface::class, ClientCommentService::class);
-
-        // Admin
         $this->app->bind(UserServiceInterface::class, UserService::class);
         $this->app->bind(RoleServiceInterface::class, RoleService::class);
         $this->app->bind(PermissionServiceInterface::class, PermissionService::class);
         $this->app->bind(AuthServiceInterface::class, AuthService::class);
-        $this->app->bind(CategoryServiceInterface::class, CategoryService::class);
-        $this->app->bind(CommentServiceInterface::class, CommentService::class);
-        $this->app->bind(TagServiceInterface::class, TagService::class);
-        $this->app->bind(PageServiceInterface::class, PageService::class);
-        $this->app->bind(PostServiceInterface::class, PostService::class);
+        $this->app->bind(OrganizationServiceInterface::class, OrganizationService::class);
+        $this->app->bind(DepartmentServiceInterface::class, DepartmentService::class);
+        $this->app->bind(DepartmentTitleServiceInterface::class, DepartmentTitleService::class);
+        $this->app->bind(ContractTypeServiceInterface::class, ContractTypeService::class);
+        $this->app->bind(EmployeeContractServiceInterface::class, EmployeeContractService::class);
+        $this->app->bind(LeaveRequestServiceInterface::class, LeaveRequestService::class);
+        $this->app->bind(RecruitmentSettingServiceInterface::class, RecruitmentSettingService::class);
+        $this->app->bind(RecruitmentRequestServiceInterface::class, RecruitmentRequestService::class);
     }
 
     /**

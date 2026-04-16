@@ -4,12 +4,15 @@ import Role from '@pages/Dashboard/Role/Role';
 import Permission from '@pages/Dashboard/Permission/Permission';
 import User from '@pages/Dashboard/User/User';
 import PermissionMatrix from '@pages/Dashboard/PermissionMatrix/PermissionMatrix';
-import Page from '@pages/Dashboard/Page/Page';
-import Post from '@pages/Dashboard/Post/Post';
-import Comment from '@pages/Dashboard/Comment/Comment';
-import Category from '@pages/Dashboard/Category/Category';
-import Tag from '@pages/Dashboard/Tag/Tag';
 import Media from '@pages/Dashboard/Media/Media';
+import Organization from '@pages/Dashboard/Organization/Organization';
+import Department from '@pages/Dashboard/Department/Department';
+import DepartmentTitle from '@pages/Dashboard/DepartmentTitle/DepartmentTitle';
+import ContractType from '@pages/Dashboard/ContractType/ContractType';
+import EmployeeContract from '@pages/Dashboard/EmployeeContract/EmployeeContract';
+import RecruitmentSettings from '@pages/Dashboard/Recruitment/RecruitmentSettings';
+import RecruitmentRequest from '@pages/Dashboard/Recruitment/RecruitmentRequest';
+import LeaveRequest from '@pages/Dashboard/LeaveRequest/LeaveRequest';
 
 import Reports from '@pages/dashboard/Reports';
 import Settings from '@pages/dashboard/Settings';
@@ -28,11 +31,14 @@ export const DashboardRoutes = [
         children: [
             { index: true, element: <Home /> },
             { path: 'user', element: <User /> },
-            { path: 'page', element: <Page /> },
-            { path: 'post', element: <Post /> },
-            { path: 'comment', element: <Comment /> },
-            { path: 'category', element: <Category /> },
-            { path: 'tag', element: <Tag /> },
+            { path: 'organization', element: <Organization /> },
+            { path: 'department', element: <Department /> },
+            { path: 'department-title', element: <DepartmentTitle /> },
+            { path: 'contract-type', element: <ContractType /> },
+            { path: 'employee-contract', element: <EmployeeContract /> },
+            { path: 'recruitment-settings', element: <RecruitmentSettings /> },
+            { path: 'recruitment-request', element: <RecruitmentRequest /> },
+            { path: 'leave-request', element: <LeaveRequest /> },
             { path: 'media', element: <Media /> },
             { path: 'permission-matrix', element: <PermissionMatrix /> },
             { path: 'role', element: <Role /> },

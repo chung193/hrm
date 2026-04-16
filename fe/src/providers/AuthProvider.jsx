@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import { login as loginApi, register as registerApi } from '@services/auth'
 import { useGlobalContext } from './GlobalProvider';
 import { instance } from "@services/axios";
+import { ORGANIZATION_SCOPE_STORAGE_KEY } from '@services/axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
@@ -35,6 +36,7 @@ export function AuthProvider({ children }) {
         showLoading();
         loginApi({ email: username, password })
             .then(res => {
+                localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
                 const u = {
                     id: res.data.data.user.id,
                     name: res.data.data.user.name,
@@ -43,6 +45,7 @@ export function AuthProvider({ children }) {
                 };
                 setUser(u);
                 localStorage.setItem('user', JSON.stringify(u));
+                window.dispatchEvent(new Event('auth-user-changed'));
                 navigate(from, { replace: true });
                 hideLoading();
             })
@@ -69,6 +72,8 @@ export function AuthProvider({ children }) {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
+        localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
+        window.dispatchEvent(new Event('auth-user-changed'));
         navigate('/auth/login', { replace: true });
     };
 

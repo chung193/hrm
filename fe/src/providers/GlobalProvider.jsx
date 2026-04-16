@@ -1,10 +1,11 @@
 // GlobalProvider.js
-import React, { createContext, useState, useContext } from 'react'
+import React, { createContext, useEffect, useState, useContext } from 'react'
 import Notification from './partials/Notification'
 import Loading from './partials/Loading'
 import CustomModal from './partials/Modal'
 import Drawer from './partials/Drawer'
 import Confirm from './partials/Confirm'
+import { authInstance, ORGANIZATION_SCOPE_STORAGE_KEY } from '@services/axios'
 
 const GlobalContext = createContext()
 
@@ -13,6 +14,12 @@ export const useGlobalContext = () => {
 }
 
 const GlobalProvider = ({ children }) => {
+    const [organizationScope, setOrganizationScope] = useState({
+        profile: null,
+        organizations: [],
+        selectedOrganizationId: null,
+        canSwitchOrganization: false
+    });
 
     const [confirm, setConfirm] = useState({
         open: false,
@@ -82,6 +89,106 @@ const GlobalProvider = ({ children }) => {
         if (drawerCloseCallback) drawerCloseCallback();
     };
 
+    const loadOrganizationScope = async () => {
+        let user = null;
+        try {
+            user = JSON.parse(localStorage.getItem('user') || 'null');
+        } catch (error) {
+            user = null;
+        }
+
+        if (!user?.id || !user?.token) {
+            setOrganizationScope({
+                profile: null,
+                organizations: [],
+                selectedOrganizationId: null,
+                canSwitchOrganization: false
+            });
+            localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
+            return;
+        }
+
+        try {
+            const profileRes = await authInstance.get(`user/${user.id}`);
+            const profile = profileRes?.data?.data || null;
+            const roleNames = Array.isArray(profile?.roles)
+                ? profile.roles.map((role) => String(role?.name || '').toLowerCase())
+                : [];
+            const canSwitchOrganization = roleNames.some((name) =>
+                ['admin', 'super-admin', 'super admin'].includes(name)
+            );
+            const ownOrganizationId = profile?.detail?.organization_id ? Number(profile.detail.organization_id) : null;
+
+            let organizations = [];
+            let selectedOrganizationId = ownOrganizationId;
+
+            if (canSwitchOrganization) {
+                const orgRes = await authInstance.get('organization/all');
+                organizations = orgRes?.data?.data || [];
+
+                const storedScopeId = Number(localStorage.getItem(ORGANIZATION_SCOPE_STORAGE_KEY) || 0);
+                const hasStored = storedScopeId > 0 && organizations.some((org) => Number(org.id) === storedScopeId);
+                const hasOwn = ownOrganizationId && organizations.some((org) => Number(org.id) === Number(ownOrganizationId));
+
+                if (hasStored) {
+                    selectedOrganizationId = storedScopeId;
+                } else if (hasOwn) {
+                    selectedOrganizationId = Number(ownOrganizationId);
+                } else {
+                    selectedOrganizationId = organizations[0]?.id ? Number(organizations[0].id) : null;
+                }
+            }
+
+            if (selectedOrganizationId) {
+                localStorage.setItem(ORGANIZATION_SCOPE_STORAGE_KEY, String(selectedOrganizationId));
+            } else {
+                localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
+            }
+
+            setOrganizationScope({
+                profile,
+                organizations,
+                selectedOrganizationId,
+                canSwitchOrganization
+            });
+        } catch (error) {
+            setOrganizationScope({
+                profile: null,
+                organizations: [],
+                selectedOrganizationId: null,
+                canSwitchOrganization: false
+            });
+            localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
+        }
+    };
+
+    const setOrganizationScopeId = (organizationId) => {
+        const nextId = organizationId ? Number(organizationId) : null;
+        if (nextId) {
+            localStorage.setItem(ORGANIZATION_SCOPE_STORAGE_KEY, String(nextId));
+        } else {
+            localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
+        }
+
+        setOrganizationScope((prev) => ({
+            ...prev,
+            selectedOrganizationId: nextId
+        }));
+    };
+
+    useEffect(() => {
+        loadOrganizationScope();
+
+        const onAuthChange = () => {
+            loadOrganizationScope();
+        };
+
+        window.addEventListener('auth-user-changed', onAuthChange);
+        return () => {
+            window.removeEventListener('auth-user-changed', onAuthChange);
+        };
+    }, []);
+
     return (
         <GlobalContext.Provider
             value={{
@@ -93,7 +200,10 @@ const GlobalProvider = ({ children }) => {
                 openDrawer,
                 closeDrawer,
                 showConfirm,
-                closeConfirm
+                closeConfirm,
+                organizationScope,
+                setOrganizationScopeId,
+                reloadOrganizationScope: loadOrganizationScope
             }}
         >
             {children}

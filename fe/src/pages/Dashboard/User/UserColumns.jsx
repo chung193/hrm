@@ -1,4 +1,4 @@
-import { Chip, Avatar, Box, Stack, Typography } from "@mui/material";
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import { getMediaUrl } from '@utils/mediaUrl';
 
 const getColumns = (t) => [
@@ -9,14 +9,10 @@ const getColumns = (t) => [
         sortable: false,
         filterable: false,
         renderCell: (params) => {
-            const paginationModel =
-                params.api.state.pagination?.paginationModel;
-
+            const paginationModel = params.api.state.pagination?.paginationModel;
             const page = paginationModel?.page ?? 0;
             const pageSize = paginationModel?.pageSize ?? 0;
-
-            const indexInPage =
-                params.api.getRowIndexRelativeToVisibleRows(params.id) + 1;
+            const indexInPage = params.api.getRowIndexRelativeToVisibleRows(params.id) + 1;
 
             return page * pageSize + indexInPage;
         },
@@ -24,7 +20,7 @@ const getColumns = (t) => [
     {
         field: 'name',
         headerName: t('pages.user.table.name'),
-        width: 200,
+        width: 220,
         editable: true,
         renderCell: (params) => {
             return (
@@ -43,8 +39,8 @@ const getColumns = (t) => [
                         </Typography>
                     </Stack>
                 </Box>
-            )
-        }
+            );
+        },
     },
     {
         field: 'email',
@@ -52,22 +48,20 @@ const getColumns = (t) => [
         width: 250,
         align: 'center',
         editable: true,
-        renderCell: (params) => {
-            return params.value
-        }
+        renderCell: (params) => params.value,
     },
     {
-        field: 'status',
+        field: 'is_active',
         headerName: t('pages.user.table.status'),
         width: 150,
-        editable: false,
+        editable: true,
         renderCell: (params) => {
-            if (params.value) {
-                return <Chip label="Người dùng đang tạm khóa" color="secondary" size="small" />
+            if (!params.value) {
+                return <Chip label="Inactive" color="secondary" size="small" />;
             }
 
-            return <Chip label="Hoạt động" color="success" size="small" />
-        }
+            return <Chip label="Active" color="success" size="small" />;
+        },
     },
     {
         field: 'roles',
@@ -78,7 +72,7 @@ const getColumns = (t) => [
             const roles = Array.isArray(params.value) ? params.value : [];
 
             if (roles.length === 0) {
-                return 'Chưa set';
+                return 'Not assigned';
             }
 
             return (
@@ -88,9 +82,8 @@ const getColumns = (t) => [
                     ))}
                 </Stack>
             );
-        }
+        },
     },
-
     {
         field: 'created_at',
         headerName: t('pages.user.table.createdAt'),

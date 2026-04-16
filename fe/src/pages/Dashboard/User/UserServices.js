@@ -22,6 +22,11 @@ export const show = async (id) => {
     return response
 };
 
+export const getAllSimple = async () => {
+    const response = await authInstance.get('users/all');
+    return response;
+};
+
 export const storage = async (data) => {
     const response = await authInstance.post('user', data)
     return response

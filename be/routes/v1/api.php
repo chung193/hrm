@@ -1,25 +1,22 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\UserController;
-use App\Http\Controllers\Api\V1\RoleController;
-use App\Http\Controllers\Api\V1\PermissionController;
-use App\Http\Controllers\Api\V1\CategoryController;
-use App\Http\Controllers\Api\V1\TagController;
-use App\Http\Controllers\Api\V1\PostController;
-use App\Http\Controllers\Api\V1\CommentController;
-use App\Http\Controllers\Api\V1\PageController;
+use App\Http\Controllers\Api\V1\ContractTypeController;
+use App\Http\Controllers\Api\V1\DepartmentController;
+use App\Http\Controllers\Api\V1\DepartmentTitleController;
+use App\Http\Controllers\Api\V1\EmployeeContractController;
+use App\Http\Controllers\Api\V1\LeaveRequestController;
 use App\Http\Controllers\Api\V1\MediaController;
-use App\Http\Controllers\Api\V1\StatisticsController;
+use App\Http\Controllers\Api\V1\OrganizationController;
+use App\Http\Controllers\Api\V1\PermissionController;
+use App\Http\Controllers\Api\V1\RecruitmentRequestController;
+use App\Http\Controllers\Api\V1\RecruitmentSettingController;
+use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SearchController;
+use App\Http\Controllers\Api\V1\StatisticsController;
 use App\Http\Controllers\Api\V1\UploadFileController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
-
-// client
-use App\Http\Controllers\Api\V1\Client\CategoryController as ClientCategoryController;
-use App\Http\Controllers\Api\V1\Client\PostController as ClientPostController;
-use App\Http\Controllers\Api\V1\Client\CommentController as ClientCommentController;
-use App\Http\Controllers\Api\V1\Client\TagController as ClientTagController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,37 +29,13 @@ use App\Http\Controllers\Api\V1\Client\TagController as ClientTagController;
 |
 */
 
-Route::name('client.')
-    ->prefix('client')
-    ->group(
-        function () {
-            Route::apiResource('category', ClientCategoryController::class)->only(['index'])->names('category');
-            Route::apiResource('tag', ClientTagController::class)->only(['index'])->names('tag');
-            Route::get('post', [ClientPostController::class, 'index'])->name('post.index');
-            Route::get('post/{slug}', [ClientPostController::class, 'show'])->name('post.show');
-            Route::get('post/{post_slug}/comments', [ClientCommentController::class, 'indexByPost'])->name('post.comments');
-            Route::post('post/{post_slug}/comments', [ClientCommentController::class, 'storeByPost'])->name('post.comments.store');
-            Route::get('my-comments', [ClientCommentController::class, 'myComments'])->middleware('auth:api')->name('my-comments');
-            Route::apiResource('comment', ClientCommentController::class)->only(['store', 'update', 'destroy'])->names('comment');
-            Route::patch('comment/{id}/approve', [ClientCommentController::class, 'approve'])->name('comment.approve');
-            // Route::group(['middleware' => 'auth:api'], function () {
-            //     Route::post('post/{post}/comments', [ClientCommentController::class, 'storeByPost'])->name('post.comments.store');
-            //     Route::apiResource('comment', ClientCommentController::class)->only(['store', 'update', 'destroy'])->names('comment');
-            //     Route::patch('comment/{id}/approve', [ClientCommentController::class, 'approve'])->name('comment.approve');
-            // });
-        }
-    );
-
 Route::get('/ping', function () {
     return 'V1 OK';
 });
 
 // Search routes (public)
 Route::get('/search', [SearchController::class, 'global'])->name('search.global');
-Route::get('/search/posts', [SearchController::class, 'posts'])->name('search.posts');
-Route::get('/search/pages', [SearchController::class, 'pages'])->name('search.pages');
 Route::get('/search/users', [SearchController::class, 'users'])->name('search.users');
-Route::get('/search/categories', [SearchController::class, 'categories'])->name('search.categories');
 
 Route::name('auth.')
     ->prefix('auth')
@@ -83,8 +56,6 @@ Route::name('auth.')
         });
     });
 
-Route::post('/post-import-wordpress-xml', [PostController::class, 'importWordpressXml'])->name('post.import.wordpress_xml');
-
 Route::group(['middleware' => 'auth:api'], function () {
     // Statistics routes
     Route::get('/statistics/dashboard', [StatisticsController::class, 'dashboard'])->name('statistics.dashboard');
@@ -101,29 +72,49 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResource('media', MediaController::class)->only(['index', 'store', 'update', 'destroy'])->names('media');
     Route::delete('medias', [MediaController::class, 'bulkDestroy'])->name('media.bulk_destroy');
 
-    Route::apiResource('category', CategoryController::class)->names('category');
-    Route::post('/category-export', [CategoryController::class, 'export'])->name('category.export');
-    Route::delete('categories', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk_destroy');
+    Route::get('organization/all', [OrganizationController::class, 'all'])->name('organizations.all');
+    Route::get('organization/active', [OrganizationController::class, 'active'])->name('organizations.active');
+    Route::apiResource('organization', OrganizationController::class)->names('organizations');
+    Route::delete('organizations', [OrganizationController::class, 'bulkDestroy'])->name('organizations.bulk_destroy');
 
-    Route::apiResource('tag', TagController::class)->names('tag');
-    Route::post('/tag-export', [TagController::class, 'export'])->name('tag.export');
-    Route::delete('tags', [TagController::class, 'bulkDestroy'])->name('tags.bulk_destroy');
+    Route::get('department/all', [DepartmentController::class, 'all'])->name('departments.all');
+    Route::get('department/active', [DepartmentController::class, 'active'])->name('departments.active');
+    Route::apiResource('department', DepartmentController::class)->names('departments');
+    Route::delete('departments', [DepartmentController::class, 'bulkDestroy'])->name('departments.bulk_destroy');
 
-    Route::apiResource('post', PostController::class)->names('post');
-    Route::post('/post-export', [PostController::class, 'export'])->name('post.export');
+    Route::get('department-title/all', [DepartmentTitleController::class, 'all'])->name('department_titles.all');
+    Route::get('department-title/active', [DepartmentTitleController::class, 'active'])->name('department_titles.active');
+    Route::apiResource('department-title', DepartmentTitleController::class)->names('department_titles');
+    Route::delete('department-titles', [DepartmentTitleController::class, 'bulkDestroy'])->name('department_titles.bulk_destroy');
 
-    Route::get('/post-count', [PostController::class, 'postCount'])->name('post.count');
-    Route::delete('posts', [PostController::class, 'bulkDestroy'])->name('post.bulk_destroy');
+    Route::get('contract-type/all', [ContractTypeController::class, 'all'])->name('contract_types.all');
+    Route::get('contract-type/active', [ContractTypeController::class, 'active'])->name('contract_types.active');
+    Route::apiResource('contract-type', ContractTypeController::class)->names('contract_types');
+    Route::delete('contract-types', [ContractTypeController::class, 'bulkDestroy'])->name('contract_types.bulk_destroy');
 
-    Route::get('/comment', [CommentController::class, 'index'])->name('comment.index');
-    Route::get('/comment-count', [CommentController::class, 'count'])->name('comment.count');
-    Route::patch('/comment/{id}/approve', [CommentController::class, 'approve'])->name('comment.approve');
-    Route::delete('/comment/{id}', [CommentController::class, 'destroy'])->name('comment.destroy');
-    Route::delete('/comments', [CommentController::class, 'bulkDestroy'])->name('comment.bulk_destroy');
+    Route::get('employee-contract/all', [EmployeeContractController::class, 'all'])->name('employee_contracts.all');
+    Route::get('employee-contract/active', [EmployeeContractController::class, 'active'])->name('employee_contracts.active');
+    Route::apiResource('employee-contract', EmployeeContractController::class)->names('employee_contracts');
+    Route::delete('employee-contracts', [EmployeeContractController::class, 'bulkDestroy'])->name('employee_contracts.bulk_destroy');
 
-    Route::apiResource('page', PageController::class)->names('page');
-    Route::post('/page-export', [PageController::class, 'export'])->name('page.export');
-    Route::delete('pages', [PageController::class, 'bulkDestroy'])->name('pages.bulk_destroy');
+    Route::get('leave-request/all', [LeaveRequestController::class, 'all'])->name('leave_requests.all');
+    Route::get('leave-request/active', [LeaveRequestController::class, 'active'])->name('leave_requests.active');
+    Route::get('leave-request/calendar', [LeaveRequestController::class, 'calendar'])->name('leave_requests.calendar');
+    Route::get('leave-request/balance', [LeaveRequestController::class, 'balance'])->name('leave_requests.balance');
+    Route::patch('leave-request/{id}/approve', [LeaveRequestController::class, 'approve'])->name('leave_requests.approve');
+    Route::patch('leave-request/{id}/reject', [LeaveRequestController::class, 'reject'])->name('leave_requests.reject');
+    Route::apiResource('leave-request', LeaveRequestController::class)->names('leave_requests');
+    Route::delete('leave-requests', [LeaveRequestController::class, 'bulkDestroy'])->name('leave_requests.bulk_destroy');
+
+    Route::get('recruitment-setting', [RecruitmentSettingController::class, 'show'])->name('recruitment_settings.show');
+    Route::put('recruitment-setting', [RecruitmentSettingController::class, 'update'])->name('recruitment_settings.update');
+
+    Route::get('recruitment-request/all', [RecruitmentRequestController::class, 'all'])->name('recruitment_requests.all');
+    Route::get('recruitment-request/active', [RecruitmentRequestController::class, 'active'])->name('recruitment_requests.active');
+    Route::patch('recruitment-request/{id}/receive', [RecruitmentRequestController::class, 'receive'])->name('recruitment_requests.receive');
+    Route::patch('recruitment-request/{id}/status', [RecruitmentRequestController::class, 'updateStatus'])->name('recruitment_requests.status');
+    Route::apiResource('recruitment-request', RecruitmentRequestController::class)->names('recruitment_requests');
+    Route::delete('recruitment-requests', [RecruitmentRequestController::class, 'bulkDestroy'])->name('recruitment_requests.bulk_destroy');
 
     Route::post('/role-export', [RoleController::class, 'export'])->name('roles.export');
     Route::post('/role/{role}/permission', [RoleController::class, 'assignPermissions'])->name('roles.assign_permissions');

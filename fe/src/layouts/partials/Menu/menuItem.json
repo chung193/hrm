@@ -41,41 +41,54 @@
                 "url": "/dashboard/user"
             },
             {
-                "id": "content",
-                "label": "content",
-                "url": "javascript:;",
-                "children": [
-                    {
-                        "id": "page",
-                        "label": "Page",
-                        "url": "/dashboard/page"
-                    },
-                    {
-                        "id": "category",
-                        "label": "Category",
-                        "url": "/dashboard/category"
-                    },
-                    {
-                        "id": "tag",
-                        "label": "Tag",
-                        "url": "/dashboard/tag"
-                    },
-                    {
-                        "id": "post",
-                        "label": "Post",
-                        "url": "/dashboard/post"
-                    },
-                    {
-                        "id": "comment",
-                        "label": "Comment",
-                        "url": "/dashboard/comment"
-                    },
-                    {
-                        "id": "media",
-                        "label": "Media",
-                        "url": "/dashboard/media"
-                    }
-                ]
+                "id": "organization",
+                "label": "Organization",
+                "url": "/dashboard/organization"
+            },
+            {
+                "id": "department",
+                "label": "Department",
+                "url": "/dashboard/department"
+            },
+            {
+                "id": "department-title",
+                "label": "Department Title",
+                "url": "/dashboard/department-title"
+            },
+            {
+                "id": "contract-type",
+                "label": "Contract Type",
+                "url": "/dashboard/contract-type"
+            },
+            {
+                "id": "employee-contract",
+                "label": "Employee Contract",
+                "url": "/dashboard/employee-contract"
+            },
+            {
+                "id": "recruitment-settings",
+                "label": "Recruitment Settings",
+                "url": "/dashboard/recruitment-settings"
+            },
+            {
+                "id": "recruitment-request",
+                "label": "Recruitment Requests",
+                "url": "/dashboard/recruitment-request"
+            },
+            {
+                "id": "leave-request",
+                "label": "Leave Requests",
+                "url": "/dashboard/leave-request"
+            },
+            {
+                "id": "calendar",
+                "label": "Calendar",
+                "url": "/dashboard/calendar"
+            },
+            {
+                "id": "media",
+                "label": "Media",
+                "url": "/dashboard/media"
             },
             {
                 "id": "role-permission",

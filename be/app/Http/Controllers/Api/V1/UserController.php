@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Requests\Api\V1\UserStoreRequest;
-use App\Http\Requests\Api\V1\UserUpdateRequest;
 use App\Http\Requests\Api\V1\UserDetailUpdateRequest;
 use App\Http\Resources\Api\User\UserResource;
 use App\Http\Resources\Api\User\UserWithRoleResource;

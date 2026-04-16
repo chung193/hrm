@@ -2,7 +2,7 @@ import { CollapseAction } from '@redux/UIReducer';
 import { Settings, Menu as MenuIcon, ArrowForwardIos } from '@mui/icons-material';
 import SettingDrawer from '@layouts/partials/Setting/SettingDrawer'
 import {
-    AppBar as SiteAppBar, Toolbar, Typography, Stack, IconButton, Box, Badge, Avatar, Menu, MenuItem, Divider
+    AppBar as SiteAppBar, Toolbar, Typography, Stack, IconButton, Box, Badge, Avatar, Menu, MenuItem, Divider, FormControl, InputLabel, Select
 } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import { useGlobalContext } from '@providers/GlobalProvider';
@@ -21,7 +21,9 @@ const AppBar = () => {
 
     const dispatch = useDispatch();
     const {
-        openDrawer
+        openDrawer,
+        organizationScope,
+        setOrganizationScopeId
     } = useGlobalContext();
 
     const isCollapsed = useSelector((state) => state.ui.data.CollapseMenu);
@@ -71,6 +73,26 @@ const AppBar = () => {
 
                     {/* Phải: các action */}
                     <Stack direction="row" spacing={1.5} alignItems="center" sx={{ ml: 2 }}>
+                        {organizationScope?.canSwitchOrganization && (
+                            <FormControl size="small" sx={{ minWidth: 180 }}>
+                                <InputLabel id="organization-scope-label">Organization</InputLabel>
+                                <Select
+                                    labelId="organization-scope-label"
+                                    label="Organization"
+                                    value={organizationScope?.selectedOrganizationId || ''}
+                                    onChange={(event) => {
+                                        setOrganizationScopeId(event.target.value ? Number(event.target.value) : null);
+                                        window.location.reload();
+                                    }}
+                                >
+                                    {organizationScope?.organizations?.map((organization) => (
+                                        <MenuItem key={organization.id} value={organization.id}>
+                                            {organization.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
                         <FullscreenToggleButton />
                         {/* <NotificationMenu /> */}
                         <LanguageSwitcherFlag />

@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\UserDetail;
+use Illuminate\Database\Seeder;
 
 class UserSeeder extends Seeder
 {
@@ -21,17 +20,20 @@ class UserSeeder extends Seeder
         ]);
         $user->assignRole('admin');
 
-        UserDetail::factory()->create([
-            'user_id' => 1,
+        $details = [
+            'employee_code' => 'EMP-0001',
             'phone' => '0796496199',
-            'address' => 'Ngô Quyền',
-            'city' => 'Hải Phòng',
-            'description' => 'Trầm tính',
-            'position' => 'Lập trình viên',
+            'address' => 'Ngo Quyen',
+            'city' => 'Hai Phong',
+            'description' => 'Tram tinh',
+            'position' => 'Lap trinh vien',
             'website' => 'https://chungvd.com',
             'github' => 'https://github.com/chung193',
-            'join_date' => now(),
-            'birthday' => now(),
-        ]);
+            'join_date' => now()->toDateString(),
+            'hired_at' => now()->toDateString(),
+            'birthday' => now()->toDateString(),
+        ];
+
+        UserDetail::query()->updateOrCreate(['user_id' => $user->id], $details);
     }
 }

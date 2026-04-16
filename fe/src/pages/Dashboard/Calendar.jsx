@@ -1,340 +1,197 @@
-// CalendarScreenBig.jsx
-import React, { useMemo, useState, useCallback } from "react";
-import {
-    AppBar, Toolbar, Typography, Box, Paper, Stack, Divider, IconButton,
-    List, ListItemButton, ListItemText, Chip, Button, Dialog, DialogTitle,
-    DialogContent, DialogActions, TextField, Avatar, Tooltip
-} from "@mui/material";
-import {
-    Event as EventIcon,
-    Today as TodayIcon,
-    Add as AddIcon,
-    Close as CloseIcon
-} from "@mui/icons-material";
+import { useEffect, useMemo, useState } from 'react';
+import { Box, Chip, Divider, Paper, Stack, Typography } from '@mui/material';
+import MainCard from '@components/MainCard';
+import { Calendar, dayjsLocalizer } from 'react-big-calendar';
+import dayjs from 'dayjs';
+import { useGlobalContext } from '@providers/GlobalProvider';
+import { getCalendar, getLeaveBalance } from '@pages/Dashboard/LeaveRequest/LeaveRequestServices';
 
-import { Calendar, dayjsLocalizer } from "react-big-calendar";
-import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
-import MainCard from "@components/MainCard";
-
-dayjs.extend(isBetween);
-
-// Localizer cho Big Calendar dùng dayjs
 const localizer = dayjsLocalizer(dayjs);
 
-// Mock data ban đầu
-const seedEvents = [
-    {
-        id: "e1",
-        title: "Standup Team IT",
-        start: dayjs().hour(9).minute(0).toDate(),
-        end: dayjs().hour(9).minute(30).toDate(),
-        location: "Room 401",
-        desc: "Daily standup 30 phút.",
-        color: "primary",
-        attendees: ["Ray", "Bro"],
-    },
-    {
-        id: "e2",
-        title: "Deploy HRM v2.3",
-        start: dayjs().hour(14).minute(0).toDate(),
-        end: dayjs().hour(15).minute(0).toDate(),
-        location: "Zoom",
-        desc: "Triển khai + verify logs.",
-        color: "success",
-        attendees: ["Ops", "QA", "Bro"],
-    },
-    {
-        id: "e3",
-        title: "Coffee chat ☕",
-        start: dayjs().add(1, "day").hour(10).minute(0).toDate(),
-        end: dayjs().add(1, "day").hour(10).minute(45).toDate(),
-        location: "Sân thượng",
-        desc: "Relax xíu cho đời nở hoa.",
-        color: "warning",
-        attendees: ["Bro"],
-    },
-];
+const statusColorMap = {
+    pending: '#ed6c02',
+    approved: '#2e7d32',
+    rejected: '#d32f2f',
+    cancelled: '#616161',
+    holiday: '#1976d2',
+};
 
-const fmt = (d) => dayjs(d).format("HH:mm");
-const sameDay = (a, b) => dayjs(a).isSame(b, "day");
+const statusLabelMap = {
+    pending: 'Pending',
+    approved: 'Approved',
+    rejected: 'Rejected',
+    cancelled: 'Cancelled',
+    holiday: 'Holiday',
+};
 
-// Style event theo màu (gần giống palette MUI)
-const eventStyleGetter = (event /*, start, end, isSelected*/) => {
-    const map = {
-        primary: "#1976d2",
-        success: "#2e7d32",
-        warning: "#ed6c02",
-        info: "#0288d1",
-        error: "#d32f2f",
-    };
-    const bg = map[event.color] || map.info;
+const eventStyleGetter = (event) => {
+    const bg = statusColorMap[event.status] || '#0288d1';
+
     return {
         style: {
             backgroundColor: bg,
             borderRadius: 8,
-            border: "none",
-            color: "#fff",
-            padding: "2px 6px",
+            border: 'none',
+            color: '#fff',
+            padding: '2px 6px',
         },
     };
 };
 
+const normalizeLeaveEvents = (rows) => {
+    return rows.map((item) => ({
+        id: item.id,
+        title: `${item.user?.name || 'Employee'} - ${item.leave_type}`,
+        start: dayjs(item.start_date).startOf('day').toDate(),
+        end: dayjs(item.end_date).add(1, 'day').startOf('day').toDate(),
+        allDay: true,
+        status: item.status,
+        eventType: 'leave',
+        meta: item,
+    }));
+};
+
+const normalizeHolidayEvents = (rows) => {
+    return rows.map((item) => ({
+        id: `holiday-${item.id}`,
+        title: `Holiday - ${item.name}`,
+        start: dayjs(item.holiday_date).startOf('day').toDate(),
+        end: dayjs(item.holiday_date).add(1, 'day').startOf('day').toDate(),
+        allDay: true,
+        status: 'holiday',
+        eventType: 'holiday',
+        meta: item,
+    }));
+};
+
 export default function CalendarScreenBig() {
-    const [events, setEvents] = useState(seedEvents);
+    const { showLoading, hideLoading, showNotification } = useGlobalContext();
+    const [events, setEvents] = useState([]);
     const [viewDate, setViewDate] = useState(new Date());
-    const [view, setView] = useState("month"); // control view -> nút Tháng/Tuần/Ngày hoạt động
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(dayjs());
-    const [openAdd, setOpenAdd] = useState(false);
+    const [leaveBalance, setLeaveBalance] = useState(null);
 
-    const dayEvents = useMemo(
-        () =>
-            events
-                .filter((e) => sameDay(e.start, selectedDate))
-                .sort((a, b) => a.start - b.start),
-        [events, selectedDate]
-    );
+    const loadLeaveCalendar = async (date) => {
+        const month = dayjs(date).format('YYYY-MM');
 
-    // Chọn slot trống -> mở dialog thêm
-    const onSelectSlot = useCallback((slotInfo) => {
-        setSelectedDate(dayjs(slotInfo.start));
-        setOpenAdd(true);
-    }, []);
+        showLoading();
+        try {
+            const [calendarRes, balanceRes] = await Promise.all([
+                getCalendar(month),
+                getLeaveBalance(month),
+            ]);
 
-    // Click event -> xem chi tiết
-    const onSelectEvent = useCallback((event) => {
-        setSelectedEvent(event);
-        setSelectedDate(dayjs(event.start));
-    }, []);
-
-    const onNavigateToday = () => {
-        const today = dayjs();
-        setViewDate(today.toDate());
-        setSelectedDate(today);
+            const rows = calendarRes.data?.data?.leave_requests || [];
+            const holidays = calendarRes.data?.data?.holidays || [];
+            setEvents([
+                ...normalizeLeaveEvents(rows),
+                ...normalizeHolidayEvents(holidays),
+            ]);
+            setLeaveBalance(balanceRes.data?.data || null);
+        } catch (err) {
+            showNotification(err.response?.data?.message || 'Failed to load leave calendar', 'error');
+        } finally {
+            hideLoading();
+        }
     };
 
-    const handleAdd = (e) => {
-        e.preventDefault();
-        const data = new FormData(e.currentTarget);
-        const title = data.get("title")?.toString().trim();
-        const dateStr = selectedDate.format("YYYY-MM-DD");
-        const start = dayjs(`${dateStr} ${data.get("start") || "09:00"}`).toDate();
-        const end = dayjs(`${dateStr} ${data.get("end") || "10:00"}`).toDate();
-        const location = data.get("location")?.toString();
-        const desc = data.get("desc")?.toString();
-        const color = data.get("color")?.toString() || "info";
+    useEffect(() => {
+        loadLeaveCalendar(viewDate);
+    }, [viewDate]);
 
-        if (!title) return;
-
-        setEvents((prev) => [
-            ...prev,
-            {
-                id: crypto?.randomUUID?.() ?? `e_${Date.now()}`,
-                title,
-                start,
-                end,
-                location,
-                desc,
-                color,
-                attendees: ["Bro"],
-            },
-        ]);
-        setOpenAdd(false);
-    };
+    const selectedMeta = useMemo(() => selectedEvent?.meta || null, [selectedEvent]);
 
     return (
         <MainCard>
-            {/* Header */}
-            <AppBar position="static" elevation={0} color="default">
-                <Toolbar sx={{ gap: 1 }}>
-                    <EventIcon />
-                    <Typography variant="h6" sx={{ flex: 1, fontWeight: 800 }}>
-                        Lịch làm việc (React Big Calendar)
-                    </Typography>
-                    <Tooltip title="Hôm nay">
-                        <IconButton onClick={onNavigateToday}>
-                            <TodayIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Button startIcon={<AddIcon />} variant="contained" onClick={() => setOpenAdd(true)}>
-                        Thêm sự kiện
-                    </Button>
-                </Toolbar>
-                <Divider />
-            </AppBar>
+            <Typography variant='h6' sx={{ fontWeight: 700, mb: 1 }}>
+                Monthly Leave Calendar
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
 
-            {/* Content */}
-            <Box sx={{ p: 2, flex: 1, display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", lg: "1.6fr 1fr" }, minHeight: 0 }}>
-                {/* Lịch lớn */}
-                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, minWidth: 0 }}>
+            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', lg: '1.7fr 1fr' } }}>
+                <Paper variant='outlined' sx={{ p: 1.5, borderRadius: 3, minWidth: 0 }}>
                     <Calendar
                         localizer={localizer}
                         events={events}
-                        startAccessor="start"
-                        endAccessor="end"
-                        style={{ height: "calc(100vh - 170px)" }}
-                        views={["month", "week", "day", "agenda"]}
-                        defaultView="month"
+                        startAccessor='start'
+                        endAccessor='end'
+                        style={{ height: 'calc(100vh - 220px)' }}
+                        views={['month']}
+                        defaultView='month'
                         date={viewDate}
                         onNavigate={(d) => setViewDate(d)}
-                        view={view}
-                        onView={setView}
-                        selectable
-                        onSelectSlot={onSelectSlot}
-                        onSelectEvent={onSelectEvent}
                         popup
                         eventPropGetter={eventStyleGetter}
-                        dayPropGetter={(date) => ({
-                            onClick: () => setSelectedDate(dayjs(date)),
-                        })}
+                        onSelectEvent={(event) => setSelectedEvent(event)}
                         messages={{
-                            month: "Tháng",
-                            week: "Tuần",
-                            day: "Ngày",
-                            agenda: "Agenda",
-                            today: "Hôm nay",
-                            previous: "Trước",
-                            next: "Sau",
-                            showMore: (total) => `+${total} sự kiện`,
-                        }}
-                        formats={{
-                            timeGutterFormat: (date) => dayjs(date).format("HH:mm"),
-                            eventTimeRangeFormat: ({ start, end }) => `${fmt(start)}–${fmt(end)}`,
-                            agendaTimeRangeFormat: ({ start, end }) => `${fmt(start)}–${fmt(end)}`,
+                            month: 'Month',
+                            today: 'Today',
+                            previous: 'Prev',
+                            next: 'Next',
+                            showMore: (total) => `+${total} events`,
                         }}
                     />
                 </Paper>
 
-                {/* Danh sách & chi tiết */}
-                <Stack spacing={2} sx={{ minHeight: 0 }}>
-                    {/* Danh sách sự kiện theo ngày chọn */}
-                    <Paper variant="outlined" sx={{ borderRadius: 3, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 260 }}>
-                        <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 1 }}>
-                            <Typography variant="subtitle1" fontWeight={800}>
-                                Sự kiện ngày {selectedDate.format("DD/MM/YYYY")}
-                            </Typography>
-                            <Chip size="small" label={dayEvents.length} />
-                        </Box>
-                        <Divider />
-                        <Box sx={{ flex: 1, overflow: "auto" }}>
-                            {dayEvents.length === 0 ? (
-                                <Box sx={{ p: 2, color: "text.secondary" }}>Không có sự kiện.</Box>
-                            ) : (
-                                <List dense>
-                                    {dayEvents.map((ev) => (
-                                        <ListItemButton key={ev.id} onClick={() => setSelectedEvent(ev)}>
-                                            <ListItemText
-                                                primary={
-                                                    <Stack direction="row" alignItems="center" spacing={1}>
-                                                        <Chip
-                                                            size="small"
-                                                            label={`${fmt(ev.start)}–${fmt(ev.end)}`}
-                                                            color={ev.color}
-                                                            variant="outlined"
-                                                        />
-                                                        <Typography component="span" fontWeight={700}>
-                                                            {ev.title}
-                                                        </Typography>
-                                                    </Stack>
-                                                }
-                                                secondary={
-                                                    <>
-                                                        <Typography component="span" variant="body2" color="text.secondary" display="block">
-                                                            {ev.location || "—"}
-                                                        </Typography>
-                                                        {ev.desc && (
-                                                            <Typography component="span" variant="caption" color="text.secondary" display="block">
-                                                                {ev.desc}
-                                                            </Typography>
-                                                        )}
-                                                    </>
-                                                }
-                                                // FIX p lồng p: bọc ngoài của ListItemText là div, không phải p
-                                                primaryTypographyProps={{ component: "div" }}
-                                                secondaryTypographyProps={{ component: "div" }}
-                                            />
-                                        </ListItemButton>
-                                    ))}
-                                </List>
+                <Paper variant='outlined' sx={{ borderRadius: 3, p: 2 }}>
+                    <Typography variant='subtitle1' fontWeight={700} gutterBottom>
+                        Leave Balance
+                    </Typography>
+                    {leaveBalance ? (
+                        <Stack spacing={0.5} sx={{ mb: 2 }}>
+                            <Typography><strong>As Of:</strong> {leaveBalance.as_of_date}</Typography>
+                            <Typography><strong>Total Available:</strong> {leaveBalance.available_total}</Typography>
+                            <Typography><strong>Current Year Remaining:</strong> {leaveBalance.remaining_current_year}</Typography>
+                            <Typography><strong>Prev Year Available:</strong> {leaveBalance.available_previous_year}</Typography>
+                            {Number(leaveBalance.expired_previous_year || 0) > 0 && (
+                                <Typography><strong>Prev Year Expired:</strong> {leaveBalance.expired_previous_year}</Typography>
                             )}
-                        </Box>
-                    </Paper>
-
-                    {/* Chi tiết sự kiện */}
-                    <Paper variant="outlined" sx={{ borderRadius: 3, p: 2 }}>
-                        <Typography variant="subtitle1" fontWeight={800} gutterBottom>
-                            Chi tiết sự kiện
-                        </Typography>
-                        {!selectedEvent ? (
-                            <Typography color="text.secondary">Chọn 1 sự kiện để xem chi tiết.</Typography>
-                        ) : (
-                            <Stack spacing={1.25}>
-                                <Stack direction="row" alignItems="center" spacing={1}>
-                                    <Chip
-                                        size="small"
-                                        color={selectedEvent.color}
-                                        label={`${fmt(selectedEvent.start)}–${fmt(selectedEvent.end)}`}
-                                    />
-                                    <Typography variant="h6" fontWeight={800}>{selectedEvent.title}</Typography>
-                                </Stack>
-                                <Typography variant="body2" color="text.secondary">
-                                    Ngày: {dayjs(selectedEvent.start).format("DD/MM/YYYY")}
-                                </Typography>
-                                <Typography variant="body2">Địa điểm: {selectedEvent.location || "—"}</Typography>
-                                <Typography variant="body2">Mô tả: {selectedEvent.desc || "—"}</Typography>
-
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                    <Typography variant="body2">Người tham dự:</Typography>
-                                    <Stack direction="row" spacing={0.5}>
-                                        {selectedEvent.attendees?.map((name) => (
-                                            <Avatar key={name} sx={{ width: 28, height: 28 }}>
-                                                {name[0]?.toUpperCase()}
-                                            </Avatar>
-                                        ))}
-                                    </Stack>
-                                </Stack>
-
-                                <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
-                                    <Button variant="outlined" onClick={() => setSelectedEvent(null)}>Đóng</Button>
-                                    <Button variant="contained" color="primary">Sửa (demo)</Button>
-                                    <Button
-                                        variant="outlined"
-                                        color="error"
-                                        onClick={() => {
-                                            setEvents((prev) => prev.filter((e) => e.id !== selectedEvent.id));
-                                            setSelectedEvent(null);
-                                        }}
-                                    >
-                                        Xoá
-                                    </Button>
-                                </Stack>
-                            </Stack>
-                        )}
-                    </Paper>
-                </Stack>
-            </Box>
-
-            {/* Dialog thêm sự kiện */}
-            <Dialog open={openAdd} onClose={() => setOpenAdd(false)} maxWidth="sm" fullWidth component="form" onSubmit={handleAdd}>
-                <DialogTitle>Thêm sự kiện ({selectedDate.format("DD/MM/YYYY")})</DialogTitle>
-                <DialogContent dividers>
-                    <Stack spacing={2} sx={{ pt: 1 }}>
-                        <TextField autoFocus label="Tiêu đề" name="title" fullWidth required />
-                        <Stack direction="row" spacing={2}>
-                            <TextField type="time" label="Bắt đầu" name="start" defaultValue="09:00" fullWidth />
-                            <TextField type="time" label="Kết thúc" name="end" defaultValue="10:00" fullWidth />
                         </Stack>
-                        <TextField label="Địa điểm" name="location" fullWidth />
-                        <TextField label="Mô tả" name="desc" fullWidth multiline minRows={3} />
-                        <TextField label="Màu (primary/success/warning/info/error)" name="color" fullWidth defaultValue="info" />
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
-                    <Button startIcon={<CloseIcon />} onClick={() => setOpenAdd(false)}>Huỷ</Button>
-                    <Button startIcon={<AddIcon />} type="submit" variant="contained">Thêm</Button>
-                </DialogActions>
-            </Dialog>
+                    ) : (
+                        <Typography color='text.secondary' sx={{ mb: 2 }}>
+                            No leave balance data.
+                        </Typography>
+                    )}
+
+                    <Divider sx={{ mb: 2 }} />
+
+                    <Typography variant='subtitle1' fontWeight={700} gutterBottom>
+                        Leave Request Detail
+                    </Typography>
+
+                    {!selectedMeta ? (
+                        <Typography color='text.secondary'>Select one leave request on calendar to view detail.</Typography>
+                    ) : selectedEvent?.eventType === 'holiday' ? (
+                        <Stack spacing={1.25}>
+                            <Typography><strong>Type:</strong> Holiday</Typography>
+                            <Typography><strong>Name:</strong> {selectedMeta.name}</Typography>
+                            <Typography><strong>Date:</strong> {selectedMeta.holiday_date}</Typography>
+                            <Typography><strong>Note:</strong> {selectedMeta.note || '-'}</Typography>
+                        </Stack>
+                    ) : (
+                        <Stack spacing={1.25}>
+                            <Typography><strong>Request No:</strong> {selectedMeta.request_no}</Typography>
+                            <Typography><strong>Employee:</strong> {selectedMeta.user?.name || '-'}</Typography>
+                            <Typography><strong>Department:</strong> {selectedMeta.department?.name || '-'}</Typography>
+                            <Typography><strong>Type:</strong> {selectedMeta.leave_type}</Typography>
+                            <Typography><strong>Date:</strong> {selectedMeta.start_date} to {selectedMeta.end_date}</Typography>
+                            <Typography><strong>Total Days:</strong> {selectedMeta.total_days}</Typography>
+                            <Stack direction='row' spacing={1} alignItems='center'>
+                                <Typography><strong>Status:</strong></Typography>
+                                <Chip
+                                    size='small'
+                                    label={statusLabelMap[selectedMeta.status] || selectedMeta.status}
+                                    sx={{ color: '#fff', backgroundColor: statusColorMap[selectedMeta.status] || '#0288d1' }}
+                                />
+                            </Stack>
+                            <Typography><strong>Reason:</strong> {selectedMeta.reason}</Typography>
+                            {selectedMeta.rejection_reason && (
+                                <Typography><strong>Rejection Reason:</strong> {selectedMeta.rejection_reason}</Typography>
+                            )}
+                        </Stack>
+                    )}
+                </Paper>
+            </Box>
         </MainCard>
     );
 }
