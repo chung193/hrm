@@ -1,33 +1,35 @@
 import MainCard from '@components/MainCard';
 import { Box, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 
-const columns = [
+const getColumns = (t) => [
     { field: 'id', headerName: 'ID', width: 90 },
     {
         field: 'firstName',
-        headerName: 'First name',
+        headerName: t('pages.dataTables.firstName'),
         width: 150,
         editable: true,
     },
     {
         field: 'lastName',
-        headerName: 'Last name',
+        headerName: t('pages.dataTables.lastName'),
         width: 150,
         editable: true,
     },
     {
         field: 'age',
-        headerName: 'Age',
+        headerName: t('pages.dataTables.age'),
         type: 'number',
         width: 110,
         editable: true,
     },
     {
         field: 'fullName',
-        headerName: 'Full name',
-        description: 'This column has a value getter and is not sortable.',
+        headerName: t('pages.dataTables.fullName'),
+        description: t('pages.dataTables.fullNameDescription'),
         sortable: false,
         width: 160,
         valueGetter: (value, row) => `${row.firstName || ''} ${row.lastName || ''}`,
@@ -47,15 +49,18 @@ const rows = [
 ];
 
 export default function DataTables() {
+    const { t } = useTranslation('dashboard');
+    const columns = useMemo(() => getColumns(t), [t]);
+
     return (
         <MainCard
-            pageTitle='DataTables'
-            pageDescription='DataTables'
+            pageTitle={t('pages.dataTables.title')}
+            pageDescription={t('pages.dataTables.description')}
         >
             <Box sx={{ height: 'auto', width: '100%' }}>
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant='h6'>Default Datatable</Typography>
-                    <Typography>DataTables has most features enabled by default, so all you need to do to use it with your own tables is to call the construction function: $().DataTable();.</Typography>
+                    <Typography variant='h6'>{t('pages.dataTables.defaultTitle')}</Typography>
+                    <Typography>{t('pages.dataTables.defaultDescription')}</Typography>
                 </Box>
                 <DataGrid
                     rows={rows}

@@ -167,8 +167,8 @@ const Media = () => {
             totalCount={rowCount}
         >
             <MetaData
-                title="Media Management"
-                description="Media management page"
+                title={t('pages.media.title')}
+                description={t('pages.media.description')}
             />
             <Toolbar
                 loadData={loadData}
@@ -225,4 +225,3 @@ const Media = () => {
 };
 
 export default Media;
-

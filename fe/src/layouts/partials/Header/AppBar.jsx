@@ -12,6 +12,7 @@ import NotificationMenu from './NotificationMenu';
 import UserMenu from './UserMenu';
 import LanguageSwitcherFlag from '@components/LanguageSwitcherFlag';
 import ThemeSwitcherIcon from '@components/ThemeSwitcherIcon';
+import { useTranslation } from 'react-i18next';
 
 const FULL = 250;
 const MINI = 56;
@@ -20,6 +21,7 @@ const MINI = 56;
 const AppBar = () => {
 
     const dispatch = useDispatch();
+    const { t } = useTranslation('common');
     const {
         openDrawer,
         organizationScope,
@@ -75,10 +77,10 @@ const AppBar = () => {
                     <Stack direction="row" spacing={1.5} alignItems="center" sx={{ ml: 2 }}>
                         {organizationScope?.canSwitchOrganization && (
                             <FormControl size="small" sx={{ minWidth: 180 }}>
-                                <InputLabel id="organization-scope-label">Organization</InputLabel>
+                                <InputLabel id="organization-scope-label">{t('labels.organization')}</InputLabel>
                                 <Select
                                     labelId="organization-scope-label"
-                                    label="Organization"
+                                    label={t('labels.organization')}
                                     value={organizationScope?.selectedOrganizationId || ''}
                                     onChange={(event) => {
                                         setOrganizationScopeId(event.target.value ? Number(event.target.value) : null);
@@ -109,6 +111,7 @@ const AppBar = () => {
             {/* Mobile View */}
             <Box sx={{ flexGrow: 1, display: { xs: 'block', sm: 'none' } }}>
                 <Stack direction="row" alignItems="center" justifyContent="flex-end">
+                    <LanguageSwitcherFlag />
                     <ThemeSwitcherIcon />
                     <UserMenu />
                 </Stack>
@@ -119,4 +122,3 @@ const AppBar = () => {
 }
 
 export default AppBar
-

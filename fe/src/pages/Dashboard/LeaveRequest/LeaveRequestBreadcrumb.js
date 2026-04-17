@@ -1,11 +1,10 @@
-export const getBreadcrumbs = () => [
+export const getBreadcrumbs = (t) => [
     {
-        label: 'Home',
+        label: t('home'),
         path: '#',
     },
     {
-        label: 'Leave Requests',
+        label: t('pages.leaveRequest.title'),
         path: '#',
     },
 ];
-

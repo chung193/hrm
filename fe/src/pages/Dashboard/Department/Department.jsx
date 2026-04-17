@@ -10,13 +10,15 @@ import getColumns from './DepartmentColumns';
 import { getBreadcrumbs } from './DepartmentBreadcrumb';
 import { bulkDestroy, getAll, storage, update } from './DepartmentServices';
 import { getAllSimple as getAllOrganizations } from '@pages/Dashboard/Organization/OrganizationServices';
+import { useTranslation } from 'react-i18next';
 
 const STORAGE_KEY = 'list-view-options:department';
 
 const Department = () => {
     const { showLoading, hideLoading, showNotification, openModal, closeModal, showConfirm, closeConfirm, organizationScope } = useGlobalContext();
-    const columns = useMemo(() => getColumns(), []);
-    const breadcrumbs = getBreadcrumbs();
+    const { t } = useTranslation(['dashboard', 'common']);
+    const columns = useMemo(() => getColumns(t), [t]);
+    const breadcrumbs = getBreadcrumbs(t);
 
     const showOptionColumns = useMemo(
         () =>
@@ -75,7 +77,7 @@ const Department = () => {
             setRowCount(res.data.meta.total);
             setSelectedRows(new Set());
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Failed to load departments', 'error');
+            showNotification(err.response?.data?.message || t('messages.loadFailed', { ns: 'common' }), 'error');
         } finally {
             hideLoading();
         }
@@ -85,7 +87,7 @@ const Department = () => {
         setRows((prev) => prev.map((row) => (row.id === oldRow.id ? newRow : row)));
 
         update(newRow.id, newRow)
-            .then(() => showNotification('Updated successfully', 'success'))
+            .then(() => showNotification(t('messages.updated', { ns: 'common' }), 'success'))
             .catch((err) => showNotification(err.response?.data?.message || err.message, 'error'));
 
         return newRow;
@@ -103,7 +105,7 @@ const Department = () => {
             const organizations = orgRes.data.data || [];
 
             openModal(
-                'Add Department',
+                t('pages.department.add'),
                 <DepartmentAddModal
                     organizations={organizations}
                     scopedOrganizationId={organizationScope?.selectedOrganizationId || null}
@@ -111,18 +113,18 @@ const Department = () => {
                         showLoading();
                         storage(data)
                             .then(() => {
-                                showNotification('Created successfully', 'success');
+                                showNotification(t('messages.created', { ns: 'common' }), 'success');
                                 loadData();
                                 closeModal();
                             })
-                            .catch((err) => showNotification(err.response?.data?.message || 'Create failed', 'error'))
+                            .catch((err) => showNotification(err.response?.data?.message || t('messages.createFailed', { ns: 'common' }), 'error'))
                             .finally(hideLoading);
                     }}
                     onClose={closeModal}
                 />
             );
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Failed to load organizations', 'error');
+            showNotification(err.response?.data?.message || t('messages.loadOrganizationsFailed', { ns: 'common' }), 'error');
         } finally {
             hideLoading();
         }
@@ -130,13 +132,13 @@ const Department = () => {
 
     const handleDelete = () => {
         showConfirm(
-            'Confirm deletion',
-            `Delete ${selectedRows.size} department(s)?`,
+            t('messages.confirmDeletion', { ns: 'common' }),
+            t('messages.deleteDepartments', { ns: 'common', count: selectedRows.size }),
             async () => {
                 showLoading();
                 try {
                     await bulkDestroy(Array.from(selectedRows));
-                    showNotification('Deleted successfully', 'success');
+                    showNotification(t('messages.deleted', { ns: 'common' }), 'success');
                     closeConfirm();
                     loadData();
                 } catch (err) {
@@ -151,7 +153,7 @@ const Department = () => {
 
     return (
         <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
-            <MetaData title='Department Management' description='Department management page' />
+            <MetaData title={t('pages.department.title')} description={t('pages.department.description')} />
 
             <Toolbar
                 loadData={loadData}
@@ -193,5 +195,4 @@ const Department = () => {
 };
 
 export default Department;
-
 

@@ -153,7 +153,7 @@ function MessageBubble({ item, isMine }) {
             >
                 {!isMine && (
                     <Typography variant="caption" sx={{ display: 'block', mb: 0.5, opacity: 0.75 }}>
-                        {item.user?.name || 'Unknown'}
+                        {item.user?.name || 'Không rõ'}
                     </Typography>
                 )}
                 {resolvedAttachmentUrl ? (
@@ -257,7 +257,7 @@ export default function Chat({ mode = 'direct' }) {
                 return nextScopedItems[0]?.id || null;
             });
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to load conversations', 'error');
+            showNotification(error.response?.data?.message || 'Không thể tải danh sách hội thoại', 'error');
         } finally {
             setLoadingConversations(false);
         }
@@ -302,7 +302,7 @@ export default function Chat({ mode = 'direct' }) {
             setHasMoreMessages(Number(messageMeta.current_page || page) < Number(messageMeta.last_page || page));
             reloadChatState?.();
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to load chat messages', 'error');
+            showNotification(error.response?.data?.message || 'Không thể tải tin nhắn chat', 'error');
         } finally {
             if (prepend) {
                 setLoadingOlderMessages(false);
@@ -318,7 +318,7 @@ export default function Chat({ mode = 'direct' }) {
             const nextUsers = Array.isArray(response?.data?.data) ? response.data.data : [];
             setUsers(nextUsers.filter((item) => Number(item.id) !== Number(user?.id)));
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to load users', 'error');
+            showNotification(error.response?.data?.message || 'Không thể tải danh sách người dùng', 'error');
         }
     };
 
@@ -365,8 +365,8 @@ export default function Chat({ mode = 'direct' }) {
 
                 if (typeof document !== 'undefined' && document.hidden) {
                     showBrowserNotification({
-                        title: 'New conversation',
-                        body: `You were added to ${conversation.name || 'a conversation'}.`,
+                        title: 'Hội thoại mới',
+                        body: `Bạn vừa được thêm vào ${conversation.name || 'một hội thoại'}.`,
                     }).catch(() => null);
                 }
             },
@@ -387,8 +387,8 @@ export default function Chat({ mode = 'direct' }) {
                     document.hidden
                 ) {
                     showBrowserNotification({
-                        title: conversation?.name || message.user?.name || 'New message',
-                        body: message.body,
+                        title: conversation?.name || message.user?.name || 'Tin nhắn mới',
+                        body: message.body || 'Bạn có một tin nhắn mới.',
                     }).catch(() => null);
                 }
             },
@@ -498,7 +498,7 @@ export default function Chat({ mode = 'direct' }) {
             setTypingUsers([]);
             loadConversations({ silent: true });
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to send message', 'error');
+            showNotification(error.response?.data?.message || 'Không thể gửi tin nhắn', 'error');
         } finally {
             setSending(false);
         }
@@ -560,12 +560,12 @@ export default function Chat({ mode = 'direct' }) {
         }
 
         if (!file.type.startsWith('image/')) {
-            showNotification('Only image files are supported here', 'error');
+            showNotification('Chỉ hỗ trợ tệp hình ảnh ở đây', 'error');
             return;
         }
 
         if (file.size > 10 * 1024 * 1024) {
-            showNotification('Image size must be 10MB or less', 'error');
+            showNotification('Ảnh phải có dung lượng 10MB trở xuống', 'error');
             return;
         }
 
@@ -586,27 +586,27 @@ export default function Chat({ mode = 'direct' }) {
         setSelectedImagePreview('');
     };
 
-    const modeTitle = mode === 'group' ? 'Group Chats' : 'Direct Chats';
+    const modeTitle = mode === 'group' ? 'Nhóm chat' : 'Chat trực tiếp';
     const modeEmptyText = mode === 'group'
-        ? 'Tao group chat de bat dau trao doi noi bo.'
-        : 'Tao direct chat de bat dau trao doi 1-1 trong organization.';
-    const createPrimaryLabel = mode === 'group' ? 'New group' : 'New direct chat';
+        ? 'Tạo nhóm chat để bắt đầu trao đổi nội bộ.'
+        : 'Tạo cuộc chat trực tiếp để bắt đầu trao đổi 1-1 trong tổ chức.';
+    const createPrimaryLabel = mode === 'group' ? 'Tạo nhóm mới' : 'Tạo chat trực tiếp';
     const onlineParticipantIds = useMemo(() => new Set(chatState?.onlineUserIds || []), [chatState?.onlineUserIds]);
 
     const handleCreateConversation = async () => {
         if (mode === 'direct' && !dialogForm.direct_user_id) {
-            showNotification('Please choose a user', 'error');
+            showNotification('Vui lòng chọn người dùng', 'error');
             return;
         }
 
         if (mode === 'group') {
             if (!dialogForm.name.trim()) {
-                showNotification('Please enter a group name', 'error');
+                showNotification('Vui lòng nhập tên nhóm', 'error');
                 return;
             }
 
             if (dialogForm.participant_ids.length === 0) {
-                showNotification('Please choose at least one member', 'error');
+                showNotification('Vui lòng chọn ít nhất một thành viên', 'error');
                 return;
             }
         }
@@ -626,9 +626,9 @@ export default function Chat({ mode = 'direct' }) {
             setDialogForm(initialDialogForm);
             await loadConversations({ silent: true });
             setSelectedConversationId(nextConversation?.id || null);
-            showNotification('Conversation created successfully', 'success');
+            showNotification('Đã tạo hội thoại thành công', 'success');
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to create conversation', 'error');
+            showNotification(error.response?.data?.message || 'Không thể tạo hội thoại', 'error');
         }
     };
 
@@ -663,7 +663,7 @@ export default function Chat({ mode = 'direct' }) {
                                 <Box>
                                     <Typography variant="h5" sx={{ fontWeight: 700 }}>{modeTitle}</Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        {mode === 'group' ? 'Cac nhom noi bo trong organization' : 'Hoi thoai 1-1 trong organization'}
+                                        {mode === 'group' ? 'Các nhóm nội bộ trong tổ chức' : 'Hội thoại 1-1 trong tổ chức'}
                                     </Typography>
                                 </Box>
                                 <Stack direction="row" spacing={1}>
@@ -689,7 +689,7 @@ export default function Chat({ mode = 'direct' }) {
                             <TextField
                                 fullWidth
                                 size="small"
-                                placeholder="Search conversations"
+                                placeholder="Tìm hội thoại"
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 InputProps={{
@@ -707,7 +707,7 @@ export default function Chat({ mode = 'direct' }) {
                         <Box sx={{ flex: 1, overflow: 'auto', px: 1, py: 1, minHeight: 0 }}>
                             {loadingConversations ? (
                                 <Box sx={{ py: 6, textAlign: 'center' }}>
-                                    <Typography color="text.secondary">Loading conversations...</Typography>
+                                            <Typography color="text.secondary">Đang tải hội thoại...</Typography>
                                 </Box>
                             ) : (
                                 <List sx={{ p: 0 }}>
@@ -733,7 +733,7 @@ export default function Chat({ mode = 'direct' }) {
                                                 secondary={(
                                                     <Stack spacing={0.5}>
                                                         <Typography variant="body2" color="text.secondary" noWrap>
-                                                            {conversation.latest_message?.preview_text || 'Chua co tin nhan nao'}
+                                                            {conversation.latest_message?.preview_text || 'Chưa có tin nhắn nào'}
                                                         </Typography>
                                                         <Stack direction="row" spacing={0.75} flexWrap="wrap">
                                                             <Chip size="small" variant="outlined" label={conversation.type} />
@@ -757,7 +757,7 @@ export default function Chat({ mode = 'direct' }) {
                                     ))}
                                     {!filteredConversations.length && (
                                         <Box sx={{ py: 6, textAlign: 'center' }}>
-                                            <Typography color="text.secondary">Chua co hoi thoai nao.</Typography>
+                                            <Typography color="text.secondary">Chưa có hội thoại nào.</Typography>
                                         </Box>
                                     )}
                                 </List>
@@ -791,12 +791,12 @@ export default function Chat({ mode = 'direct' }) {
                                         </Stack>
                                         {typingUsers.length > 0 && (
                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                                                {typingUsers.map((item) => item.name).join(', ')} is typing...
+                                                {typingUsers.map((item) => item.name).join(', ')} đang nhập...
                                             </Typography>
                                         )}
                                         {typingUsers.length === 0 && presenceMembers.length > 0 && (
                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                                                {presenceMembers.length} online in this conversation
+                                                {presenceMembers.length} người đang trực tuyến trong hội thoại này
                                             </Typography>
                                         )}
                                     </Box>
@@ -810,13 +810,13 @@ export default function Chat({ mode = 'direct' }) {
                                 >
                                     {loadingMessages ? (
                                         <Box sx={{ py: 6, textAlign: 'center' }}>
-                                            <Typography color="text.secondary">Loading messages...</Typography>
+                                            <Typography color="text.secondary">Đang tải tin nhắn...</Typography>
                                         </Box>
                                     ) : (
                                         <Stack spacing={1.5}>
                                             {loadingOlderMessages && (
                                                 <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
-                                                    Loading older messages...
+                                                    Đang tải tin nhắn cũ hơn...
                                                 </Typography>
                                             )}
                                             {messages.map((item) => (
@@ -834,7 +834,7 @@ export default function Chat({ mode = 'direct' }) {
                             <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', px: 3 }}>
                                 <Box sx={{ textAlign: 'center' }}>
                                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                                        Chua co hoi thoai nao
+                                        Chưa có hội thoại nào
                                     </Typography>
                                     <Typography color="text.secondary" sx={{ mb: 2 }}>
                                         {modeEmptyText}
@@ -860,7 +860,7 @@ export default function Chat({ mode = 'direct' }) {
                                     <Box
                                         component="img"
                                         src={selectedImagePreview}
-                                        alt={selectedImage?.name || 'Selected image'}
+                                        alt={selectedImage?.name || 'Ảnh đã chọn'}
                                         sx={{
                                             width: 120,
                                             height: 120,
@@ -918,7 +918,7 @@ export default function Chat({ mode = 'direct' }) {
                                     multiline
                                     maxRows={4}
                                     disabled={!activeConversation || sending}
-                                    placeholder={activeConversation ? 'Type a message...' : `Choose or create a ${mode === 'group' ? 'group' : 'direct'} conversation to start chatting`}
+                                    placeholder={activeConversation ? 'Nhập tin nhắn...' : `Chọn hoặc tạo ${mode === 'group' ? 'một nhóm chat' : 'một cuộc chat trực tiếp'} để bắt đầu trò chuyện`}
                                     value={draft}
                                     onChange={handleDraftChange}
                                     onKeyDown={(event) => {
@@ -934,7 +934,7 @@ export default function Chat({ mode = 'direct' }) {
                                     disabled={!activeConversation || sending || (!draft.trim() && !selectedImage)}
                                     endIcon={<SendIcon />}
                                 >
-                                    Send
+                                    Gửi
                                 </Button>
                             </Stack>
                         </Box>
@@ -944,7 +944,7 @@ export default function Chat({ mode = 'direct' }) {
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>
-                    {mode === 'group' ? 'Create group chat' : 'Start direct chat'}
+                    {mode === 'group' ? 'Tạo nhóm chat' : 'Bắt đầu chat trực tiếp'}
                 </DialogTitle>
                 <DialogContent>
                     <Stack spacing={2} sx={{ pt: 1 }}>
@@ -952,7 +952,7 @@ export default function Chat({ mode = 'direct' }) {
                             <TextField
                                 select
                                 fullWidth
-                                label="User"
+                                label="Người dùng"
                                 value={dialogForm.direct_user_id}
                                 onChange={(event) => setDialogForm((prev) => ({ ...prev, direct_user_id: event.target.value }))}
                             >
@@ -966,7 +966,7 @@ export default function Chat({ mode = 'direct' }) {
                             <>
                                 <TextField
                                     fullWidth
-                                    label="Group name"
+                                    label="Tên nhóm"
                                     value={dialogForm.name}
                                     onChange={(event) => setDialogForm((prev) => ({ ...prev, name: event.target.value }))}
                                 />
@@ -974,7 +974,7 @@ export default function Chat({ mode = 'direct' }) {
                                     select
                                     fullWidth
                                     SelectProps={{ multiple: true }}
-                                    label="Members"
+                                    label="Thành viên"
                                     value={dialogForm.participant_ids}
                                     onChange={(event) => setDialogForm((prev) => ({ ...prev, participant_ids: event.target.value }))}
                                 >

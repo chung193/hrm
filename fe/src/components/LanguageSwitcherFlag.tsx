@@ -9,16 +9,18 @@ import {
     Box
 } from '@mui/material';
 import { setDayjsLocale } from '../theme/dateLocale';
+import { AppLang, normalizeLanguage, persistLanguage } from '../i18n/language';
 
-type Lang = 'vi' | 'en';
+const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, '/');
+
 const viFlag = (
-    <img src="/vi.png" alt="Tiếng Việt" width="20" height="15" style={{ borderRadius: '2px' }} />
+    <img src={assetUrl('vi.png')} alt="Tiếng Việt" width="20" height="15" style={{ borderRadius: '2px' }} />
 );
 const enFlag = (
-    <img src="/en.png" alt="English" width="20" height="15" style={{ borderRadius: '2px' }} />
+    <img src={assetUrl('en.png')} alt="English" width="20" height="15" style={{ borderRadius: '2px' }} />
 );
 
-const languages: Record<Lang, { label: string; flag: string }> = {
+const languages: Record<AppLang, { label: string; flag: JSX.Element }> = {
     vi: { label: 'Tiếng Việt', flag: viFlag },
     en: { label: 'English', flag: enFlag },
 };
@@ -27,17 +29,18 @@ export default function LanguageSwitcherFlag() {
     const { i18n } = useTranslation();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-    const currentLang = i18n.language as Lang;
+    const currentLang = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
 
     const setLang = useCallback(
-        (next: Lang) => {
-            if (i18n.language === next) return;
+        (next: AppLang) => {
+            if (normalizeLanguage(i18n.resolvedLanguage || i18n.language) === next) {
+                setAnchorEl(null);
+                return;
+            }
 
             i18n.changeLanguage(next);
             setDayjsLocale(next);
-            document.documentElement.lang = next;
-            document.documentElement.dir = 'ltr';
-            localStorage.setItem('lang', next);
+            persistLanguage(next);
 
             setAnchorEl(null);
         },
@@ -68,7 +71,7 @@ export default function LanguageSwitcherFlag() {
                     horizontal: 'right',
                 }}
             >
-                {(Object.keys(languages) as Lang[]).map((lang) => (
+                {(Object.keys(languages) as AppLang[]).map((lang) => (
                     <MenuItem
                         key={lang}
                         selected={currentLang === lang}

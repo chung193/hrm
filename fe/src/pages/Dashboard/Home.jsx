@@ -5,6 +5,7 @@ import StatCard from './components/StatCard';
 import { getStatisticsDashboard } from '@services/statistics';
 import { useGlobalContext } from '@providers/GlobalProvider';
 import UsersByRoleChart from './components/UsersByRoleChart';
+import { useTranslation } from 'react-i18next';
 
 const iconMap = {
     Users: People,
@@ -13,6 +14,7 @@ const iconMap = {
 export default function Home() {
     const [stats, setStats] = useState(null);
     const { showLoading, hideLoading } = useGlobalContext();
+    const { t } = useTranslation('dashboard');
 
     useEffect(() => {
         const fetchStatistics = async () => {
@@ -34,7 +36,7 @@ export default function Home() {
         stats?.summary?.map((stat) => ({
             ...stat,
             icon: iconMap[stat.icon],
-            trendLabel: 'vs. previous month',
+            trendLabel: t('pages.home.trendPreviousMonth'),
         })) || [];
 
     return (
@@ -59,24 +61,24 @@ export default function Home() {
                         <Card sx={{ p: 2, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12)' }}>
                             <Stack spacing={1}>
                                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                    Users
+                                    {t('pages.home.users')}
                                 </Typography>
                                 <Stack spacing={0.5}>
                                     <Stack direction="row" justifyContent="space-between">
                                         <Typography variant="body2" color="text.secondary">
-                                            Active:
+                                            {t('pages.home.active')}
                                         </Typography>
                                         <Chip label={stats?.details?.users?.active ?? 0} size="small" color="success" variant="outlined" />
                                     </Stack>
                                     <Stack direction="row" justifyContent="space-between">
                                         <Typography variant="body2" color="text.secondary">
-                                            Inactive:
+                                            {t('pages.home.inactive')}
                                         </Typography>
                                         <Chip label={stats?.details?.users?.inactive ?? 0} size="small" color="error" variant="outlined" />
                                     </Stack>
                                     <Stack direction="row" justifyContent="space-between">
                                         <Typography variant="body2" color="text.secondary">
-                                            This Month:
+                                            {t('pages.home.thisMonth')}
                                         </Typography>
                                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                                             {stats?.details?.users?.thisMonth ?? 0}

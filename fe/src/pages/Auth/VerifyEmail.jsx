@@ -4,11 +4,13 @@ import { CircularProgress, Typography, Box, Button, Stack } from "@mui/material"
 import { CheckCircle, Error } from "@mui/icons-material";
 import { useAuth } from '@providers/AuthProvider';
 import FormLayout from './layout/FormLayout';
+import { useTranslation } from 'react-i18next';
 
 export default function VerifyEmail() {
     const [params] = useSearchParams();
     const navigate = useNavigate();
     const { verifyEmail } = useAuth();
+    const { t } = useTranslation('common');
     const url = params.get("url");
     const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error'
 
@@ -42,10 +44,10 @@ export default function VerifyEmail() {
                             color: 'text.primary',
                         }}
                     >
-                        Verifying Email
+                        {t('auth.verifyingEmail')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Please wait while we verify your email address...
+                        {t('auth.verifyingEmailSubtitle')}
                     </Typography>
                 </Box>
             </Stack>
@@ -69,10 +71,10 @@ export default function VerifyEmail() {
                             color: 'success.main',
                         }}
                     >
-                        Email Verified!
+                        {t('auth.emailVerified')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Your email has been successfully verified. You can now log in to your account.
+                        {t('auth.emailVerifiedSubtitle')}
                     </Typography>
                 </Box>
                 <Button
@@ -87,7 +89,7 @@ export default function VerifyEmail() {
                         borderRadius: 1,
                     }}
                 >
-                    Go to Login
+                    {t('auth.goToLogin')}
                 </Button>
             </Stack>
         );
@@ -109,10 +111,10 @@ export default function VerifyEmail() {
                         color: 'error.main',
                     }}
                 >
-                    Verification Failed
+                    {t('auth.verificationFailed')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    The verification link is invalid or has expired. Please try again or request a new link.
+                    {t('auth.verificationFailedSubtitle')}
                 </Typography>
             </Box>
             <Button
@@ -127,7 +129,7 @@ export default function VerifyEmail() {
                     borderRadius: 1,
                 }}
             >
-                Back to Login
+                {t('auth.backToLogin')}
             </Button>
         </Stack>
     );

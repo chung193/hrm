@@ -10,13 +10,15 @@ import getColumns from './DepartmentTitleColumns';
 import { getBreadcrumbs } from './DepartmentTitleBreadcrumb';
 import { bulkDestroy, getAll, storage, update } from './DepartmentTitleServices';
 import { getAllSimple as getAllDepartments } from '@pages/Dashboard/Department/DepartmentServices';
+import { useTranslation } from 'react-i18next';
 
 const STORAGE_KEY = 'list-view-options:department-title';
 
 const DepartmentTitle = () => {
     const { showLoading, hideLoading, showNotification, openModal, closeModal, showConfirm, closeConfirm } = useGlobalContext();
-    const columns = useMemo(() => getColumns(), []);
-    const breadcrumbs = getBreadcrumbs();
+    const { t } = useTranslation(['dashboard', 'common']);
+    const columns = useMemo(() => getColumns(t), [t]);
+    const breadcrumbs = getBreadcrumbs(t);
 
     const showOptionColumns = useMemo(
         () =>
@@ -75,7 +77,7 @@ const DepartmentTitle = () => {
             setRowCount(res.data.meta.total);
             setSelectedRows(new Set());
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Failed to load department titles', 'error');
+            showNotification(err.response?.data?.message || t('messages.loadFailed', { ns: 'common' }), 'error');
         } finally {
             hideLoading();
         }
@@ -85,7 +87,7 @@ const DepartmentTitle = () => {
         setRows((prev) => prev.map((row) => (row.id === oldRow.id ? newRow : row)));
 
         update(newRow.id, newRow)
-            .then(() => showNotification('Updated successfully', 'success'))
+            .then(() => showNotification(t('messages.updated', { ns: 'common' }), 'success'))
             .catch((err) => showNotification(err.response?.data?.message || err.message, 'error'));
 
         return newRow;
@@ -103,25 +105,25 @@ const DepartmentTitle = () => {
             const departments = depRes.data.data || [];
 
             openModal(
-                'Add Department Title',
+                t('pages.departmentTitle.add'),
                 <DepartmentTitleAddModal
                     departments={departments}
                     onSubmit={(data) => {
                         showLoading();
                         storage(data)
                             .then(() => {
-                                showNotification('Created successfully', 'success');
+                                showNotification(t('messages.created', { ns: 'common' }), 'success');
                                 loadData();
                                 closeModal();
                             })
-                            .catch((err) => showNotification(err.response?.data?.message || 'Create failed', 'error'))
+                            .catch((err) => showNotification(err.response?.data?.message || t('messages.createFailed', { ns: 'common' }), 'error'))
                             .finally(hideLoading);
                     }}
                     onClose={closeModal}
                 />
             );
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Failed to load departments', 'error');
+            showNotification(err.response?.data?.message || t('messages.loadDepartmentsFailed', { ns: 'common' }), 'error');
         } finally {
             hideLoading();
         }
@@ -129,13 +131,13 @@ const DepartmentTitle = () => {
 
     const handleDelete = () => {
         showConfirm(
-            'Confirm deletion',
-            `Delete ${selectedRows.size} department title(s)?`,
+            t('messages.confirmDeletion', { ns: 'common' }),
+            t('messages.deleteDepartmentTitles', { ns: 'common', count: selectedRows.size }),
             async () => {
                 showLoading();
                 try {
                     await bulkDestroy(Array.from(selectedRows));
-                    showNotification('Deleted successfully', 'success');
+                    showNotification(t('messages.deleted', { ns: 'common' }), 'success');
                     closeConfirm();
                     loadData();
                 } catch (err) {
@@ -150,7 +152,7 @@ const DepartmentTitle = () => {
 
     return (
         <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
-            <MetaData title='Department Title Management' description='Department title management page' />
+            <MetaData title={t('pages.departmentTitle.title')} description={t('pages.departmentTitle.description')} />
 
             <Toolbar
                 loadData={loadData}
@@ -192,5 +194,4 @@ const DepartmentTitle = () => {
 };
 
 export default DepartmentTitle;
-
 

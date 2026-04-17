@@ -5,30 +5,32 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import FormLayout from './layout/FormLayout';
+import { useTranslation } from 'react-i18next';
 
 /* ===== ZOD SCHEMA ===== */
-const registerSchema = z
+const createRegisterSchema = (t) => z
     .object({
-        name: z.string().min(2, 'Tên tối thiểu 2 ký tự'),
-        email: z.string().email('Email không hợp lệ'),
-        password: z.string().min(8, 'Mật khẩu tối thiểu 8 ký tự'),
+        name: z.string().min(2, t('messages.min', { field: t('labels.fullName'), count: 2 })),
+        email: z.string().email(t('messages.emailInvalid')),
+        password: z.string().min(8, t('messages.min', { field: t('labels.password'), count: 8 })),
         password_confirmation: z.string().min(8),
     })
     .refine((data) => data.password === data.password_confirmation, {
-        message: 'Mật khẩu xác nhận không khớp',
+        message: t('messages.passwordMismatch'),
         path: ['password_confirmation'],
     });
 
 export default function Register() {
     const { register: registerUser } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation('common');
 
     const {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm({
-        resolver: zodResolver(registerSchema),
+        resolver: zodResolver(createRegisterSchema(t)),
         defaultValues: {
             name: 'new member',
             email: 'testbro@example.com',
@@ -49,8 +51,8 @@ export default function Register() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Full Name"
-                        placeholder="Enter your full name"
+                        label={t('labels.fullName')}
+                        placeholder={t('auth.fullNamePlaceholder')}
                         size="medium"
                         {...register('name')}
                         error={!!errors.name}
@@ -71,8 +73,8 @@ export default function Register() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Email"
-                        placeholder="Enter your email"
+                        label={t('labels.email')}
+                        placeholder={t('auth.emailPlaceholder')}
                         size="medium"
                         {...register('email')}
                         error={!!errors.email}
@@ -93,9 +95,9 @@ export default function Register() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Password"
+                        label={t('labels.password')}
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder={t('auth.passwordPlaceholder')}
                         size="medium"
                         {...register('password')}
                         error={!!errors.password}
@@ -116,9 +118,9 @@ export default function Register() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Confirm Password"
+                        label={t('labels.confirmPassword')}
                         type="password"
-                        placeholder="Confirm your password"
+                        placeholder={t('auth.confirmPasswordPlaceholder')}
                         size="medium"
                         {...register('password_confirmation')}
                         error={!!errors.password_confirmation}
@@ -161,7 +163,7 @@ export default function Register() {
                     {isSubmitting ? (
                         <CircularProgress size={24} sx={{ color: 'white' }} />
                     ) : (
-                        'Create Account'
+                        t('auth.createAccount')
                     )}
                 </Button>
             </Stack>
@@ -170,7 +172,7 @@ export default function Register() {
 
     const footerText = (
         <>
-            Already have an account?{' '}
+            {t('auth.alreadyHaveAccount')}{' '}
             <Link
                 href="/auth/login"
                 sx={{
@@ -180,15 +182,15 @@ export default function Register() {
                     '&:hover': { textDecoration: 'underline' },
                 }}
             >
-                Sign in
+                {t('auth.signIn')}
             </Link>
         </>
     );
 
     return (
         <FormLayout
-            title="Create Account"
-            subtitle="Join us today and get started"
+            title={t('auth.createAccount')}
+            subtitle={t('auth.joinSubtitle')}
             children={formContent}
             showDivider
             showSocialButtons

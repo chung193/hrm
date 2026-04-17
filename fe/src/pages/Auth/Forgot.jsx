@@ -6,10 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuth } from '@providers/AuthProvider';
 import FormLayout from './layout/FormLayout';
+import { useTranslation } from 'react-i18next';
 
 /* ===== ZOD SCHEMA ===== */
-const forgotSchema = z.object({
-    username: z.string().email('Email không hợp lệ'),
+const createForgotSchema = (t) => z.object({
+    username: z.string().email(t('messages.emailInvalid')),
 });
 
 export default function Forgot() {
@@ -17,13 +18,14 @@ export default function Forgot() {
     const location = useLocation();
     const from = location.state?.from?.pathname || '/auth/login';
     const { forgot } = useAuth();
+    const { t } = useTranslation('common');
 
     const {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm({
-        resolver: zodResolver(forgotSchema),
+        resolver: zodResolver(createForgotSchema(t)),
         defaultValues: {
             username: 'chungvd.it@gmail.com',
         },
@@ -52,7 +54,7 @@ export default function Forgot() {
             }}
         >
             <ArrowBack sx={{ fontSize: 18 }} />
-            Back to Login
+            {t('auth.backToLogin')}
         </Link>
     );
 
@@ -63,8 +65,8 @@ export default function Forgot() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Email"
-                        placeholder="Enter your email"
+                        label={t('labels.email')}
+                        placeholder={t('auth.emailPlaceholder')}
                         size="medium"
                         {...register('username')}
                         error={!!errors.username}
@@ -107,7 +109,7 @@ export default function Forgot() {
                     {isSubmitting ? (
                         <CircularProgress size={24} sx={{ color: 'white' }} />
                     ) : (
-                        'Send Reset Link'
+                        t('auth.sendResetLink')
                     )}
                 </Button>
             </Stack>
@@ -116,8 +118,8 @@ export default function Forgot() {
 
     return (
         <FormLayout
-            title="Forgot Password?"
-            subtitle="Enter your email address and we'll send you a link to reset your password."
+            title={t('auth.forgotTitle')}
+            subtitle={t('auth.forgotSubtitle')}
             headerChildren={headerChildren}
             children={formContent}
         />

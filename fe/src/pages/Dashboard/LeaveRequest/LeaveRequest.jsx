@@ -9,12 +9,14 @@ import LeaveRequestAddModal from './LeaveRequestAddModal';
 import getColumns from './LeaveRequestColumns';
 import { getBreadcrumbs } from './LeaveRequestBreadcrumb';
 import { approve, bulkDestroy, getAll, reject, storage, update } from './LeaveRequestServices';
+import { useTranslation } from 'react-i18next';
 
 const STORAGE_KEY = 'list-view-options:leave-request';
 
 const LeaveRequest = () => {
     const { showLoading, hideLoading, showNotification, openModal, closeModal, showConfirm, closeConfirm } = useGlobalContext();
-    const breadcrumbs = getBreadcrumbs();
+    const { t } = useTranslation(['dashboard', 'common']);
+    const breadcrumbs = getBreadcrumbs(t);
     const [rows, setRows] = useState([]);
     const [selectedRows, setSelectedRows] = useState(new Set());
     const [rowCount, setRowCount] = useState(0);
@@ -53,7 +55,7 @@ const LeaveRequest = () => {
             setRowCount(res.data.meta?.total || 0);
             setSelectedRows(new Set());
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Failed to load leave requests', 'error');
+            showNotification(err.response?.data?.message || t('messages.loadFailed', { ns: 'common' }), 'error');
         } finally {
             hideLoading();
         }
@@ -78,17 +80,17 @@ const LeaveRequest = () => {
 
     const handleAdd = () => {
         openModal(
-            'Create Leave Request',
+            t('pages.leaveRequest.add'),
             <LeaveRequestAddModal
                 onSubmit={(data) => {
                     showLoading();
                     storage(data)
                         .then(() => {
-                            showNotification('Created successfully', 'success');
+                            showNotification(t('messages.created', { ns: 'common' }), 'success');
                             loadData();
                             closeModal();
                         })
-                        .catch((err) => showNotification(err.response?.data?.message || 'Create failed', 'error'))
+                        .catch((err) => showNotification(err.response?.data?.message || t('messages.createFailed', { ns: 'common' }), 'error'))
                         .finally(hideLoading);
                 }}
                 onClose={closeModal}
@@ -100,17 +102,17 @@ const LeaveRequest = () => {
         showLoading();
         try {
             await approve(row.id);
-            showNotification('Approved successfully', 'success');
+            showNotification(t('pages.leaveRequest.approved'), 'success');
             loadData();
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Approve failed', 'error');
+            showNotification(err.response?.data?.message || t('pages.leaveRequest.approveFailed'), 'error');
         } finally {
             hideLoading();
         }
     };
 
     const handleReject = async (row) => {
-        const reason = window.prompt('Rejection reason');
+        const reason = window.prompt(t('pages.leaveRequest.rejectionReason'));
         if (!reason) {
             return;
         }
@@ -118,16 +120,16 @@ const LeaveRequest = () => {
         showLoading();
         try {
             await reject(row.id, reason);
-            showNotification('Rejected successfully', 'success');
+            showNotification(t('pages.leaveRequest.rejected'), 'success');
             loadData();
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Reject failed', 'error');
+            showNotification(err.response?.data?.message || t('pages.leaveRequest.rejectFailed'), 'error');
         } finally {
             hideLoading();
         }
     };
 
-    const columns = useMemo(() => getColumns({ onApprove: handleApprove, onReject: handleReject }), []);
+    const columns = useMemo(() => getColumns({ onApprove: handleApprove, onReject: handleReject, t }), [t]);
 
     const showOptionColumns = useMemo(
         () =>
@@ -148,21 +150,21 @@ const LeaveRequest = () => {
             end_date: newRow.end_date,
             reason: newRow.reason,
         })
-            .then(() => showNotification('Updated successfully', 'success'))
-            .catch((err) => showNotification(err.response?.data?.message || 'Update failed', 'error'));
+            .then(() => showNotification(t('messages.updated', { ns: 'common' }), 'success'))
+            .catch((err) => showNotification(err.response?.data?.message || t('messages.updateFailed', { ns: 'common' }), 'error'));
 
         return newRow;
     };
 
     const handleDelete = () => {
         showConfirm(
-            'Confirm deletion',
-            `Delete ${selectedRows.size} leave request(s)?`,
+            t('messages.confirmDeletion', { ns: 'common' }),
+            t('messages.deleteLeaveRequests', { ns: 'common', count: selectedRows.size }),
             async () => {
                 showLoading();
                 try {
                     await bulkDestroy(Array.from(selectedRows));
-                    showNotification('Deleted successfully', 'success');
+                    showNotification(t('messages.deleted', { ns: 'common' }), 'success');
                     closeConfirm();
                     loadData();
                 } catch (err) {
@@ -177,7 +179,7 @@ const LeaveRequest = () => {
 
     return (
         <MainCard breadcrumbs={breadcrumbs}>
-            <MetaData title='Leave Requests' description='Leave requests management' />
+            <MetaData title={t('pages.leaveRequest.title')} description={t('pages.leaveRequest.description')} />
 
             <Toolbar
                 loadData={loadData}
@@ -222,4 +224,3 @@ const LeaveRequest = () => {
 };
 
 export default LeaveRequest;
-

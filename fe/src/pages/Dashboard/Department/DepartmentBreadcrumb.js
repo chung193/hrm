@@ -1,10 +1,10 @@
-﻿export const getBreadcrumbs = () => [
+﻿export const getBreadcrumbs = (t) => [
     {
-        label: 'Home',
+        label: t('home'),
         path: '#',
     },
     {
-        label: 'Departments',
+        label: t('pages.department.title'),
         path: '#',
     },
 ];

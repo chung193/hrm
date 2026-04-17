@@ -168,8 +168,8 @@ const NotificationMenu = () => {
                 onClose={handleCloseNavMenu}
             >
                 <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Notifications</Typography>
-                    <Typography variant="caption" onClick={handleMarkAllAsRead} sx={{ color: 'primary.main', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Mark all as read</Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Thông báo</Typography>
+                    <Typography variant="caption" onClick={handleMarkAllAsRead} sx={{ color: 'primary.main', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Đánh dấu đã đọc tất cả</Typography>
                 </Box>
 
                 {loading ? (
@@ -195,7 +195,7 @@ const NotificationMenu = () => {
 
                 {!loading && !items.length && (
                     <Box sx={{ px: 2, py: 4, textAlign: 'center' }}>
-                        <Typography variant="body2" color="text.secondary">Chua co thong bao nao.</Typography>
+                        <Typography variant="body2" color="text.secondary">Chưa có thông báo nào.</Typography>
                     </Box>
                 )}
 
@@ -208,7 +208,7 @@ const NotificationMenu = () => {
                         }}
                         sx={{ fontSize: '0.875rem', fontWeight: 500, '&:hover': { textDecoration: 'none' } }}
                     >
-                        View all notifications
+                        Xem tất cả thông báo
                     </Link>
                 </Box>
             </Menu>

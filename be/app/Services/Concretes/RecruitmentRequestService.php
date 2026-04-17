@@ -230,9 +230,9 @@ class RecruitmentRequestService extends BaseService implements RecruitmentReques
             if ($requester) {
                 $this->notificationService->notifyUser($requester, [
                     'kind' => 'recruitment_request',
-                    'title' => 'Cap nhat yeu cau tuyen dung',
+                    'title' => 'Cập nhật yêu cầu tuyển dụng',
                     'message' => sprintf(
-                        'Yeu cau %s cho vi tri %s da chuyen sang trang thai %s.',
+                        'Yêu cầu %s cho vị trí %s đã chuyển sang trạng thái %s.',
                         $item->request_no,
                         $item->requested_position,
                         $nextStatus
@@ -281,9 +281,9 @@ class RecruitmentRequestService extends BaseService implements RecruitmentReques
             if ($requester) {
                 $this->notificationService->notifyUser($requester, [
                     'kind' => 'recruitment_request',
-                    'title' => 'Yeu cau tuyen dung da duoc tiep nhan',
+                    'title' => 'Yêu cầu tuyển dụng đã được tiếp nhận',
                     'message' => sprintf(
-                        'Yeu cau %s cho vi tri %s da duoc phong HR tiep nhan.',
+                        'Yêu cầu %s cho vị trí %s đã được phòng HR tiếp nhận.',
                         $item->request_no,
                         $item->requested_position
                     ),

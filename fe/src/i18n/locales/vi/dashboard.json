@@ -85,6 +85,123 @@
                 "passwordConfirmation": "Xác nhận mật khẩu"
             }
         },
+        "department": {
+            "title": "Quản lý phòng ban",
+            "description": "Quản lý phòng ban",
+            "add": "Thêm phòng ban",
+            "table": {
+                "orgId": "ID tổ chức"
+            }
+        },
+        "departmentTitle": {
+            "title": "Quản lý chức danh",
+            "description": "Quản lý chức danh phòng ban",
+            "add": "Thêm chức danh",
+            "table": {
+                "departmentId": "ID phòng ban",
+                "canRequest": "Được tạo yêu cầu",
+                "canApproveLeave": "Được duyệt nghỉ phép"
+            }
+        },
+        "organization": {
+            "title": "Quản lý tổ chức",
+            "description": "Quản lý tổ chức",
+            "add": "Thêm tổ chức"
+        },
+        "contractType": {
+            "title": "Quản lý loại hợp đồng",
+            "description": "Quản lý loại hợp đồng",
+            "add": "Thêm loại hợp đồng"
+        },
+        "employeeContract": {
+            "title": "Quản lý hợp đồng nhân viên",
+            "description": "Quản lý hợp đồng nhân viên",
+            "add": "Thêm hợp đồng nhân viên"
+        },
+        "leaveRequest": {
+            "title": "Đơn nghỉ phép",
+            "description": "Quản lý đơn nghỉ phép",
+            "add": "Tạo đơn nghỉ phép",
+            "rejectionReason": "Lý do từ chối",
+            "approved": "Duyệt thành công",
+            "rejected": "Từ chối thành công",
+            "approveFailed": "Duyệt thất bại",
+            "rejectFailed": "Từ chối thất bại",
+            "types": {
+                "annual": "Nghỉ phép năm",
+                "sick": "Nghỉ ốm",
+                "unpaid": "Nghỉ không lương",
+                "other": "Khác"
+            }
+        },
+        "recruitmentRequest": {
+            "title": "Yêu cầu tuyển dụng",
+            "description": "Quản lý yêu cầu tuyển dụng",
+            "add": "Tạo yêu cầu tuyển dụng",
+            "markReceived": "Đã đánh dấu tiếp nhận yêu cầu",
+            "markReceivedFailed": "Đánh dấu tiếp nhận thất bại",
+            "hiredUpdated": "Đã cập nhật nhân sự trúng tuyển",
+            "hiredUpdateFailed": "Cập nhật nhân sự trúng tuyển thất bại",
+            "statusUpdated": "Cập nhật trạng thái thành công"
+        },
+        "recruitmentSettings": {
+            "title": "Cài đặt tuyển dụng",
+            "description": "Cài đặt tuyển dụng",
+            "leadershipDepartment": "Phòng ban lãnh đạo",
+            "hrDepartment": "Phòng nhân sự",
+            "selectScopeFirst": "Vui lòng chọn phạm vi tổ chức trước",
+            "updated": "Cập nhật cài đặt tuyển dụng thành công",
+            "updateFailed": "Cập nhật cài đặt tuyển dụng thất bại"
+        },
+        "permissionMatrix": {
+            "title": "Ma trận phân quyền",
+            "description": "Quản lý ma trận phân quyền",
+            "helper": "Kiểm soát cấp quyền và gán vai trò cho đội ngũ",
+            "updated": "Cập nhật quyền thành công",
+            "selectAll": "Chọn tất cả",
+            "unselectAll": "Bỏ chọn tất cả"
+        },
+        "home": {
+            "users": "Người dùng",
+            "active": "Hoạt động:",
+            "inactive": "Không hoạt động:",
+            "thisMonth": "Tháng này:",
+            "trendPreviousMonth": "so với tháng trước"
+        },
+        "settings": {
+            "title": "Cài đặt",
+            "description": "Cài đặt"
+        },
+        "features": {
+            "title": "Tính năng",
+            "description": "Tính năng",
+            "loading": "Hiển thị tải",
+            "hideLoading": "Ẩn tải",
+            "showNotification": "Hiển thị thông báo",
+            "openModal": "Mở modal",
+            "closeModal": "Đóng modal",
+            "openDrawer": "Mở ngăn kéo",
+            "closeDrawer": "Đóng ngăn kéo",
+            "showConfirm": "Hiển thị xác nhận",
+            "closeConfirm": "Đóng xác nhận",
+            "sampleNotification": "Chào em cô gái Lam Hồng",
+            "sampleContent": "Đây là nội dung"
+        },
+        "reports": {
+            "title": "Báo cáo",
+            "description": "Báo cáo"
+        },
+        "dataTables": {
+            "title": "Bảng dữ liệu",
+            "description": "Bảng dữ liệu",
+            "defaultTitle": "Bảng dữ liệu mặc định",
+            "defaultDescription": "DataTables bật sẵn hầu hết tính năng mặc định, bạn chỉ cần gọi hàm khởi tạo để dùng với bảng của mình.",
+            "firstName": "Tên",
+            "lastName": "Họ",
+            "age": "Tuổi",
+            "fullName": "Họ và tên",
+            "fullNameDescription": "Cột này dùng giá trị tính toán và không thể sắp xếp."
+        },
         "category": {
             "deleteConfirmTitle": "Xác nhận xóa danh mục",
             "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa {{count}} danh mục này không?",
@@ -249,7 +366,7 @@
             "deleteConfirmMessage": "Bạn có chắc chắn muốn xóa {{count}} ảnh này không?",
             "title": "Quản lý ảnh",
             "description": "Quản lý ảnh",
-            "addmedia": "Thêm ảnh mới",
+            "addMedia": "Thêm media",
             "nameField": "Tên ảnh",
             "descriptionField": "Mô tả ảnh",
             "guardNameField": "Tên bảo vệ",
@@ -260,10 +377,15 @@
                 "description": "Mô tả",
                 "guardName": "Tên bảo vệ",
                 "createdAt": "Ngày tạo",
-                "updatedAt": "Ngày cập nhật"
+                "updatedAt": "Ngày cập nhật",
+                "preview": "Xem trước",
+                "file": "Tệp",
+                "mime": "Mime",
+                "size": "Dung lượng"
             },
             "form": {
                 "name": "Tên ảnh",
+                "collection": "Bộ sưu tập",
                 "guardName": "Tên bảo vệ",
                 "description": "Mô tả",
                 "close": "Đóng",

@@ -2,18 +2,27 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { makeMuiTheme } from '@theme/muiTheme';
+import { useTranslation } from 'react-i18next';
+import { normalizeLanguage, persistLanguage } from '../i18n/language';
+import { setDayjsLocale } from '../theme/dateLocale';
 
 const ThemeModeContext = createContext();
 
 export function ThemeModeProvider({ children, lang: langProp }) {
     const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+    const { i18n } = useTranslation();
     const [mode, setMode] = useState(() => localStorage.getItem('theme_mode') || 'system');
 
-    // lang lấy ưu tiên từ prop; fallback localStorage -> <html lang> -> 'vi'
+    // lang lấy ưu tiên từ prop; fallback i18n -> localStorage -> <html lang> -> 'vi'
     const lang = useMemo(
-        () => langProp || localStorage.getItem('lang') || document.documentElement.lang || 'vi',
-        [langProp]
+        () => normalizeLanguage(langProp || i18n.resolvedLanguage || i18n.language || localStorage.getItem('lang') || document.documentElement.lang),
+        [langProp, i18n.resolvedLanguage, i18n.language]
     );
+
+    useEffect(() => {
+        persistLanguage(lang);
+        setDayjsLocale(lang);
+    }, [lang]);
 
     // đồng bộ color-scheme + nhớ lựa chọn
     useEffect(() => {

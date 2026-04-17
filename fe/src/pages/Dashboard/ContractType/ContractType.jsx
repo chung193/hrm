@@ -9,13 +9,15 @@ import ContractTypeAddModal from './ContractTypeAddModal';
 import getColumns from './ContractTypeColumns';
 import { getBreadcrumbs } from './ContractTypeBreadcrumb';
 import { bulkDestroy, getAll, storage, update } from './ContractTypeServices';
+import { useTranslation } from 'react-i18next';
 
 const STORAGE_KEY = 'list-view-options:contract-type';
 
 const ContractType = () => {
     const { showLoading, hideLoading, showNotification, openModal, closeModal, showConfirm, closeConfirm } = useGlobalContext();
-    const columns = useMemo(() => getColumns(), []);
-    const breadcrumbs = getBreadcrumbs();
+    const { t } = useTranslation(['dashboard', 'common']);
+    const columns = useMemo(() => getColumns(t), [t]);
+    const breadcrumbs = getBreadcrumbs(t);
 
     const showOptionColumns = useMemo(
         () =>
@@ -74,7 +76,7 @@ const ContractType = () => {
             setRowCount(res.data.meta.total);
             setSelectedRows(new Set());
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Failed to load contract types', 'error');
+            showNotification(err.response?.data?.message || t('messages.loadFailed', { ns: 'common' }), 'error');
         } finally {
             hideLoading();
         }
@@ -84,7 +86,7 @@ const ContractType = () => {
         setRows((prev) => prev.map((row) => (row.id === oldRow.id ? newRow : row)));
 
         update(newRow.id, newRow)
-            .then(() => showNotification('Updated successfully', 'success'))
+            .then(() => showNotification(t('messages.updated', { ns: 'common' }), 'success'))
             .catch((err) => showNotification(err.response?.data?.message || err.message, 'error'));
 
         return newRow;
@@ -97,17 +99,17 @@ const ContractType = () => {
 
     const handleAdd = () => {
         openModal(
-            'Add Contract Type',
+            t('pages.contractType.add'),
             <ContractTypeAddModal
                 onSubmit={(data) => {
                     showLoading();
                     storage(data)
                         .then(() => {
-                            showNotification('Created successfully', 'success');
+                            showNotification(t('messages.created', { ns: 'common' }), 'success');
                             loadData();
                             closeModal();
                         })
-                        .catch((err) => showNotification(err.response?.data?.message || 'Create failed', 'error'))
+                        .catch((err) => showNotification(err.response?.data?.message || t('messages.createFailed', { ns: 'common' }), 'error'))
                         .finally(hideLoading);
                 }}
                 onClose={closeModal}
@@ -117,13 +119,13 @@ const ContractType = () => {
 
     const handleDelete = () => {
         showConfirm(
-            'Confirm deletion',
-            `Delete ${selectedRows.size} contract type(s)?`,
+            t('messages.confirmDeletion', { ns: 'common' }),
+            t('messages.deleteContractTypes', { ns: 'common', count: selectedRows.size }),
             async () => {
                 showLoading();
                 try {
                     await bulkDestroy(Array.from(selectedRows));
-                    showNotification('Deleted successfully', 'success');
+                    showNotification(t('messages.deleted', { ns: 'common' }), 'success');
                     closeConfirm();
                     loadData();
                 } catch (err) {
@@ -138,7 +140,7 @@ const ContractType = () => {
 
     return (
         <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
-            <MetaData title='Contract Type Management' description='Contract type management page' />
+            <MetaData title={t('pages.contractType.title')} description={t('pages.contractType.description')} />
 
             <Toolbar
                 loadData={loadData}
@@ -183,5 +185,4 @@ const ContractType = () => {
 };
 
 export default ContractType;
-
 

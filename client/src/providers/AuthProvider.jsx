@@ -44,13 +44,11 @@ export function AuthProvider({ children }) {
                 token: res.data.data.token,
                 token_type: res.data.data.token_type
             };
-            localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
             setUser(authenticatedUser);
             localStorage.setItem('user', JSON.stringify(authenticatedUser));
             window.dispatchEvent(new Event('auth-user-changed'));
             navigate(from, { replace: true });
         } catch (err) {
-            localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
             const message = err?.response?.data?.message
                 || err?.message
                 || 'Đăng nhập thất bại';

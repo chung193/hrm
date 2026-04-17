@@ -38,7 +38,7 @@ const UserTable = ({ scopeMode = 'organization' }) => {
         closeConfirm,
         organizationScope,
     } = useGlobalContext();
-    const { t } = useTranslation('dashboard');
+    const { t } = useTranslation(['dashboard', 'common']);
     const columns = useMemo(() => getColumns(t), [t]);
     const showOptionColumns = useMemo(
         () =>
@@ -322,4 +322,3 @@ const UserTable = ({ scopeMode = 'organization' }) => {
 };
 
 export default UserTable;
-

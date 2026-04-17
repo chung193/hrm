@@ -46,7 +46,7 @@ const MediaAdd = ({ onSubmit, onClose }) => {
                 />
 
                 <TextField
-                    label="Collection"
+                    label={t('pages.media.form.collection')}
                     fullWidth
                     size="small"
                     value={collection}

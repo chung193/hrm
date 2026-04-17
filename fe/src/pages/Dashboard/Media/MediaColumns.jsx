@@ -29,7 +29,7 @@ const getColumns = (t) => [
     },
     {
         field: "preview",
-        headerName: "Preview",
+        headerName: t("pages.media.table.preview"),
         width: 120,
         sortable: false,
         filterable: false,
@@ -49,7 +49,7 @@ const getColumns = (t) => [
     },
     {
         field: "file_name",
-        headerName: "File",
+        headerName: t("pages.media.table.file"),
         width: 240,
         renderCell: (params) => (
             <Stack>
@@ -64,7 +64,7 @@ const getColumns = (t) => [
     },
     {
         field: "mime_type",
-        headerName: "Mime",
+        headerName: t("pages.media.table.mime"),
         width: 150,
         renderCell: (params) => (
             <Chip label={params.value} color="secondary" variant="outlined" size="small" />
@@ -72,7 +72,7 @@ const getColumns = (t) => [
     },
     {
         field: "size",
-        headerName: "Size",
+        headerName: t("pages.media.table.size"),
         width: 110,
         renderCell: (params) => formatBytes(Number(params.value || 0)),
     },

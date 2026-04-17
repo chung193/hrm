@@ -64,7 +64,7 @@ export default function Notifications() {
             const response = await getNotifications({ per_page: 50 });
             setItems(response?.data?.data?.data || []);
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to load notifications', 'error');
+            showNotification(error.response?.data?.message || 'Không thể tải danh sách thông báo', 'error');
         } finally {
             setLoading(false);
         }
@@ -81,7 +81,7 @@ export default function Notifications() {
             setUsers(userRes?.data?.data || []);
             setOrganizations(orgRes?.data?.data || []);
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to load notification options', 'error');
+            showNotification(error.response?.data?.message || 'Không thể tải dữ liệu thông báo', 'error');
         }
     };
 
@@ -133,25 +133,25 @@ export default function Notifications() {
         try {
             await markAllNotificationsRead();
             setItems((prev) => prev.map((item) => ({ ...item, is_read: true })));
-            showNotification('Marked all notifications as read', 'success');
+            showNotification('Đã đánh dấu tất cả thông báo là đã đọc', 'success');
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to update notifications', 'error');
+            showNotification(error.response?.data?.message || 'Không thể cập nhật thông báo', 'error');
         }
     };
 
     const handleBroadcast = async () => {
         if (!form.title.trim() || !form.message.trim()) {
-            showNotification('Title and message are required', 'error');
+            showNotification('Tiêu đề và nội dung là bắt buộc', 'error');
             return;
         }
 
         if (form.audience_type === 'organization' && !form.organization_id) {
-            showNotification('Please choose an organization', 'error');
+            showNotification('Vui lòng chọn tổ chức', 'error');
             return;
         }
 
         if (form.audience_type === 'users' && form.user_ids.length === 0) {
-            showNotification('Please choose at least one user', 'error');
+            showNotification('Vui lòng chọn ít nhất một người dùng', 'error');
             return;
         }
 
@@ -168,10 +168,10 @@ export default function Notifications() {
                 audience_type: prev.audience_type,
                 organization_id: organizationScope?.selectedOrganizationId || '',
             }));
-            showNotification('Notification sent successfully', 'success');
+            showNotification('Đã gửi thông báo thành công', 'success');
             loadNotifications();
         } catch (error) {
-            showNotification(error.response?.data?.message || 'Failed to broadcast notification', 'error');
+            showNotification(error.response?.data?.message || 'Không thể gửi thông báo', 'error');
         } finally {
             setSending(false);
         }
@@ -182,16 +182,16 @@ export default function Notifications() {
         setBrowserPermission(permission);
 
         if (permission === 'granted') {
-            showNotification('Browser notifications enabled', 'success');
+            showNotification('Đã bật thông báo trình duyệt', 'success');
             return;
         }
 
         if (permission === 'denied') {
-            showNotification('Browser notifications are blocked in this browser', 'warning');
+            showNotification('Thông báo trình duyệt đang bị chặn', 'warning');
             return;
         }
 
-        showNotification('Browser notifications are not available', 'warning');
+        showNotification('Trình duyệt này không hỗ trợ thông báo', 'warning');
     };
 
     return (
@@ -200,9 +200,9 @@ export default function Notifications() {
                 <MainCard>
                     <Stack spacing={2.5}>
                         <Box>
-                            <Typography variant="h5" sx={{ fontWeight: 700 }}>Broadcast Notification</Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 700 }}>Gửi thông báo</Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Gui thong bao cho mot nhom nguoi dung, mot organization hoac toan he thong.
+                                Gửi thông báo cho một nhóm người dùng, một tổ chức hoặc toàn hệ thống.
                             </Typography>
                         </Box>
 
@@ -210,7 +210,7 @@ export default function Notifications() {
                             <TextField
                                 select
                                 fullWidth
-                                label="Audience"
+                                label="Đối tượng nhận"
                                 value={form.audience_type}
                                 onChange={(event) => setForm((prev) => ({
                                     ...prev,
@@ -218,21 +218,21 @@ export default function Notifications() {
                                     user_ids: [],
                                 }))}
                             >
-                                <MenuItem value="users">Users</MenuItem>
-                                <MenuItem value="organization">Organization</MenuItem>
-                                <MenuItem value="system">System</MenuItem>
+                                <MenuItem value="users">Người dùng</MenuItem>
+                                <MenuItem value="organization">Tổ chức</MenuItem>
+                                <MenuItem value="system">Toàn hệ thống</MenuItem>
                             </TextField>
                             <TextField
                                 select
                                 fullWidth
-                                label="Kind"
+                                label="Loại thông báo"
                                 value={form.kind}
                                 onChange={(event) => setForm((prev) => ({ ...prev, kind: event.target.value }))}
                             >
-                                <MenuItem value="announcement">Announcement</MenuItem>
-                                <MenuItem value="leave_request">Leave</MenuItem>
-                                <MenuItem value="recruitment_request">Recruitment</MenuItem>
-                                <MenuItem value="asset_recall">Asset recall</MenuItem>
+                                <MenuItem value="announcement">Thông báo chung</MenuItem>
+                                <MenuItem value="leave_request">Nghỉ phép</MenuItem>
+                                <MenuItem value="recruitment_request">Tuyển dụng</MenuItem>
+                                <MenuItem value="asset_recall">Thu hồi tài sản</MenuItem>
                             </TextField>
                         </Stack>
 
@@ -240,7 +240,7 @@ export default function Notifications() {
                             <TextField
                                 select
                                 fullWidth
-                                label="Organization"
+                                label="Tổ chức"
                                 value={form.organization_id}
                                 onChange={(event) => setForm((prev) => ({ ...prev, organization_id: event.target.value }))}
                             >
@@ -262,13 +262,13 @@ export default function Notifications() {
                                     user_ids: nextValue.map((user) => Number(user.id)),
                                 }))}
                                 getOptionLabel={(option) => option?.name || option?.email || ''}
-                                renderInput={(params) => <TextField {...params} label="Users" placeholder="Choose users" />}
+                                renderInput={(params) => <TextField {...params} label="Người dùng" placeholder="Chọn người dùng" />}
                             />
                         )}
 
                         <TextField
                             fullWidth
-                            label="Title"
+                            label="Tiêu đề"
                             value={form.title}
                             onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
                         />
@@ -276,13 +276,13 @@ export default function Notifications() {
                             fullWidth
                             multiline
                             minRows={3}
-                            label="Message"
+                            label="Nội dung"
                             value={form.message}
                             onChange={(event) => setForm((prev) => ({ ...prev, message: event.target.value }))}
                         />
                         <TextField
                             fullWidth
-                            label="Action URL"
+                            label="Liên kết điều hướng"
                             placeholder="/dashboard/leave-request"
                             value={form.action_url}
                             onChange={(event) => setForm((prev) => ({ ...prev, action_url: event.target.value }))}
@@ -290,7 +290,7 @@ export default function Notifications() {
 
                         <Stack direction="row" justifyContent="flex-end">
                             <Button variant="contained" onClick={handleBroadcast} disabled={sending}>
-                                {sending ? 'Sending...' : 'Send notification'}
+                                {sending ? 'Đang gửi...' : 'Gửi thông báo'}
                             </Button>
                         </Stack>
                     </Stack>
@@ -301,19 +301,19 @@ export default function Notifications() {
                 <Stack spacing={2.5}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Box>
-                            <Typography variant="h5" sx={{ fontWeight: 700 }}>Notifications</Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 700 }}>Thông báo</Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Theo doi cac cap nhat ve nghi phep, tuyen dung, tai san va thong bao he thong.
+                                Theo dõi các cập nhật về nghỉ phép, tuyển dụng, tài sản và thông báo hệ thống.
                             </Typography>
                         </Box>
                         <Stack direction="row" spacing={1}>
                             {isBrowserNotificationSupported() && browserPermission !== 'granted' && (
                                 <Button variant="contained" onClick={handleEnableBrowserNotifications}>
-                                    Enable browser alerts
+                                    Bật thông báo trình duyệt
                                 </Button>
                             )}
                             <Button variant="outlined" onClick={handleMarkAllRead}>
-                                Mark all read
+                                Đánh dấu đã đọc tất cả
                             </Button>
                         </Stack>
                     </Stack>
@@ -344,7 +344,7 @@ export default function Notifications() {
                                                 <Typography sx={{ fontWeight: item.is_read ? 600 : 700 }}>
                                                     {item.title}
                                                 </Typography>
-                                                {!item.is_read && <Chip size="small" color="primary" label="New" />}
+                                                {!item.is_read && <Chip size="small" color="primary" label="Mới" />}
                                                 {item.kind && <Chip size="small" variant="outlined" label={item.kind} />}
                                             </Stack>
                                         )}
@@ -363,7 +363,7 @@ export default function Notifications() {
                             ))}
                             {!items.length && (
                                 <Box sx={{ py: 6, textAlign: 'center' }}>
-                                    <Typography color="text.secondary">Chua co thong bao nao.</Typography>
+                                    <Typography color="text.secondary">Chưa có thông báo nào.</Typography>
                                 </Box>
                             )}
                         </List>

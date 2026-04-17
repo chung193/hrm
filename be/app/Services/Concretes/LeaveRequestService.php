@@ -212,9 +212,9 @@ class LeaveRequestService extends BaseService implements LeaveRequestServiceInte
 
         $this->notificationService->notifyUser($item->user()->firstOrFail(), [
             'kind' => 'leave_request',
-            'title' => 'Yeu cau nghi phep da duoc duyet',
+            'title' => 'Yêu cầu nghỉ phép đã được duyệt',
             'message' => sprintf(
-                'Yeu cau %s tu %s den %s da duoc duyet.',
+                'Yêu cầu %s từ %s đến %s đã được duyệt.',
                 $item->request_no,
                 $item->start_date?->format('d/m/Y'),
                 $item->end_date?->format('d/m/Y')
@@ -251,9 +251,9 @@ class LeaveRequestService extends BaseService implements LeaveRequestServiceInte
 
         $this->notificationService->notifyUser($item->user()->firstOrFail(), [
             'kind' => 'leave_request',
-            'title' => 'Yeu cau nghi phep bi tu choi',
+            'title' => 'Yêu cầu nghỉ phép bị từ chối',
             'message' => sprintf(
-                'Yeu cau %s da bi tu choi. Ly do: %s',
+                'Yêu cầu %s đã bị từ chối. Lý do: %s',
                 $item->request_no,
                 $reason
             ),

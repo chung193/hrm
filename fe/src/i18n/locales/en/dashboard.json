@@ -85,6 +85,151 @@
                 "passwordConfirmation": "Confirm password"
             }
         },
+        "department": {
+            "title": "Department Management",
+            "description": "Department management",
+            "add": "Add Department",
+            "table": {
+                "orgId": "Org ID"
+            }
+        },
+        "departmentTitle": {
+            "title": "Department Title Management",
+            "description": "Department title management",
+            "add": "Add Department Title",
+            "table": {
+                "departmentId": "Department ID",
+                "canRequest": "Can Request",
+                "canApproveLeave": "Can Approve Leave"
+            }
+        },
+        "organization": {
+            "title": "Organization Management",
+            "description": "Organization management",
+            "add": "Add Organization"
+        },
+        "contractType": {
+            "title": "Contract Type Management",
+            "description": "Contract type management",
+            "add": "Add Contract Type"
+        },
+        "employeeContract": {
+            "title": "Employee Contract Management",
+            "description": "Employee contract management",
+            "add": "Add Employee Contract"
+        },
+        "leaveRequest": {
+            "title": "Leave Requests",
+            "description": "Leave requests management",
+            "add": "Create Leave Request",
+            "rejectionReason": "Rejection reason",
+            "approved": "Approved successfully",
+            "rejected": "Rejected successfully",
+            "approveFailed": "Approve failed",
+            "rejectFailed": "Reject failed",
+            "types": {
+                "annual": "Annual",
+                "sick": "Sick",
+                "unpaid": "Unpaid",
+                "other": "Other"
+            }
+        },
+        "recruitmentRequest": {
+            "title": "Recruitment Requests",
+            "description": "Recruitment requests management",
+            "add": "Create Recruitment Request",
+            "markReceived": "Request marked as received",
+            "markReceivedFailed": "Failed to mark as received",
+            "hiredUpdated": "Hired users updated",
+            "hiredUpdateFailed": "Failed to update hired users",
+            "statusUpdated": "Status updated"
+        },
+        "recruitmentSettings": {
+            "title": "Recruitment Settings",
+            "description": "Recruitment settings",
+            "leadershipDepartment": "Leadership Department",
+            "hrDepartment": "HR Department",
+            "selectScopeFirst": "Please select organization scope first",
+            "updated": "Recruitment settings updated",
+            "updateFailed": "Failed to update recruitment settings"
+        },
+        "media": {
+            "deleteConfirmTitle": "Confirm media deletion",
+            "deleteConfirmMessage": "Are you sure you want to delete {{count}} media item(s)?",
+            "title": "Media Management",
+            "description": "Media management",
+            "addMedia": "Add media",
+            "table": {
+                "id": "ID",
+                "stt": "No.",
+                "name": "Media name",
+                "description": "Description",
+                "guardName": "Guard name",
+                "createdAt": "Created at",
+                "updatedAt": "Updated at",
+                "preview": "Preview",
+                "file": "File",
+                "mime": "Mime",
+                "size": "Size"
+            },
+            "form": {
+                "name": "Media name",
+                "collection": "Collection",
+                "guardName": "Guard name",
+                "description": "Description",
+                "close": "Close",
+                "save": "Save"
+            }
+        },
+        "permissionMatrix": {
+            "title": "Permission Matrix",
+            "description": "Permission matrix management",
+            "helper": "Control access level and assign roles to your team",
+            "updated": "Permissions updated successfully",
+            "selectAll": "Select all",
+            "unselectAll": "Unselect all"
+        },
+        "home": {
+            "users": "Users",
+            "active": "Active:",
+            "inactive": "Inactive:",
+            "thisMonth": "This Month:",
+            "trendPreviousMonth": "vs. previous month"
+        },
+        "settings": {
+            "title": "Settings",
+            "description": "Settings"
+        },
+        "features": {
+            "title": "Features",
+            "description": "Features",
+            "loading": "Loading",
+            "hideLoading": "Hide Loading",
+            "showNotification": "Show Notification",
+            "openModal": "Open Modal",
+            "closeModal": "Close Modal",
+            "openDrawer": "Open Drawer",
+            "closeDrawer": "Close Drawer",
+            "showConfirm": "Show Confirm",
+            "closeConfirm": "Close Confirm",
+            "sampleNotification": "Hello from Lam Hong",
+            "sampleContent": "This is the content"
+        },
+        "reports": {
+            "title": "Reports",
+            "description": "Reports"
+        },
+        "dataTables": {
+            "title": "DataTables",
+            "description": "DataTables",
+            "defaultTitle": "Default Datatable",
+            "defaultDescription": "DataTables has most features enabled by default, so you only need to call the constructor to use it with your own tables.",
+            "firstName": "First name",
+            "lastName": "Last name",
+            "age": "Age",
+            "fullName": "Full name",
+            "fullNameDescription": "This column has a value getter and is not sortable."
+        },
         "comment": {
             "deleteConfirmTitle": "Confirm comment deletion",
             "deleteConfirmMessage": "Are you sure you want to delete {{count}} comment(s)?",
@@ -134,4 +279,3 @@
         }
     }
 }
-

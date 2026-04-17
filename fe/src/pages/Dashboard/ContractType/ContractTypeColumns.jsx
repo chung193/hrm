@@ -1,9 +1,9 @@
 import { Chip } from '@mui/material';
 
-const getColumns = () => [
+const getColumns = (t) => [
     {
         field: 'stt',
-        headerName: 'No.',
+        headerName: t('labels.no', { ns: 'common' }),
         width: 80,
         sortable: false,
         filterable: false,
@@ -15,18 +15,18 @@ const getColumns = () => [
             return page * pageSize + indexInPage;
         },
     },
-    { field: 'code', headerName: 'Code', width: 160, editable: true },
-    { field: 'name', headerName: 'Name', width: 220, editable: true },
-    { field: 'duration_months', headerName: 'Duration (months)', width: 170, editable: true, type: 'number' },
+    { field: 'code', headerName: t('labels.code', { ns: 'common' }), width: 160, editable: true },
+    { field: 'name', headerName: t('labels.name', { ns: 'common' }), width: 220, editable: true },
+    { field: 'duration_months', headerName: t('labels.durationMonths', { ns: 'common' }), width: 170, editable: true, type: 'number' },
     {
         field: 'is_probation',
-        headerName: 'Probation',
+        headerName: t('labels.probation', { ns: 'common' }),
         width: 130,
         type: 'boolean',
         editable: true,
         renderCell: (params) => (
             <Chip
-                label={params.value ? 'Yes' : 'No'}
+                label={params.value ? t('yes', { ns: 'common' }) : t('no', { ns: 'common' })}
                 color={params.value ? 'warning' : 'default'}
                 variant='outlined'
                 size='small'
@@ -35,13 +35,13 @@ const getColumns = () => [
     },
     {
         field: 'is_indefinite',
-        headerName: 'Indefinite',
+        headerName: t('labels.indefinite', { ns: 'common' }),
         width: 130,
         type: 'boolean',
         editable: true,
         renderCell: (params) => (
             <Chip
-                label={params.value ? 'Yes' : 'No'}
+                label={params.value ? t('yes', { ns: 'common' }) : t('no', { ns: 'common' })}
                 color={params.value ? 'info' : 'default'}
                 variant='outlined'
                 size='small'
@@ -50,13 +50,13 @@ const getColumns = () => [
     },
     {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('labels.status', { ns: 'common' }),
         width: 120,
         type: 'boolean',
         editable: true,
         renderCell: (params) => (
             <Chip
-                label={params.value ? 'Active' : 'Inactive'}
+                label={params.value ? t('active', { ns: 'common' }) : t('inactive', { ns: 'common' })}
                 color={params.value ? 'success' : 'default'}
                 variant='outlined'
                 size='small'
@@ -65,11 +65,10 @@ const getColumns = () => [
     },
     {
         field: 'updated_at',
-        headerName: 'Updated At',
+        headerName: t('labels.updatedAt', { ns: 'common' }),
         width: 200,
         renderCell: (params) => (params.value ? new Date(params.value).toLocaleString() : ''),
     },
 ];
 
 export default getColumns;
-

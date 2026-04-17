@@ -168,8 +168,8 @@ const Permission = () => {
             totalCount={rowCount}
         >
             <MetaData
-                title="Role Management"
-                description="Role management page"
+                title={t('pages.permission.title')}
+                description={t('pages.permission.description')}
             />
             <Toolbar
                 loadData={loadData}
@@ -227,4 +227,3 @@ const Permission = () => {
 };
 
 export default Permission;
-

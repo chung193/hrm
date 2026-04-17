@@ -15,15 +15,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from '@providers/AuthProvider';
 import FormLayout from './layout/FormLayout';
+import { useTranslation } from 'react-i18next';
 
 /* ===== ZOD SCHEMA ===== */
-const resetSchema = z
+const createResetSchema = (t) => z
     .object({
-        password: z.string().min(6, "Ít nhất 6 ký tự"),
+        password: z.string().min(6, t('messages.min', { field: t('labels.password'), count: 6 })),
         password_confirmation: z.string(),
     })
     .refine((data) => data.password === data.password_confirmation, {
-        message: "Mật khẩu không khớp",
+        message: t('messages.passwordMismatch'),
         path: ["password_confirmation"],
     });
 
@@ -31,6 +32,7 @@ export default function ResetPassword() {
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const { resetPassword } = useAuth();
+    const { t } = useTranslation('common');
     const token = params.get("token");
     const email = params.get("email");
 
@@ -39,14 +41,14 @@ export default function ResetPassword() {
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm({
-        resolver: zodResolver(resetSchema),
+        resolver: zodResolver(createResetSchema(t)),
     });
 
     if (!token || !email) {
         return (
             <FormLayout
-                title="Invalid Link"
-                subtitle="This password reset link is invalid or has expired."
+                title={t('auth.invalidLink')}
+                subtitle={t('auth.invalidLinkSubtitle')}
                 headerChildren={
                     <Link
                         href="/auth/login"
@@ -65,7 +67,7 @@ export default function ResetPassword() {
                         }}
                     >
                         <ArrowBack sx={{ fontSize: 18 }} />
-                        Back to Login
+                        {t('auth.backToLogin')}
                     </Link>
                 }
             />
@@ -81,11 +83,11 @@ export default function ResetPassword() {
                 password_confirmation: data.password_confirmation,
             });
 
-            alert("Đổi mật khẩu thành công!");
+            alert(t('auth.resetSuccess'));
             navigate("/auth/login");
         } catch (err) {
             console.log(err);
-            alert("Reset thất bại!");
+            alert(t('auth.resetFailed'));
         }
     };
 
@@ -96,9 +98,9 @@ export default function ResetPassword() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="New Password"
+                        label={t('labels.newPassword')}
                         type="password"
-                        placeholder="Enter your new password"
+                        placeholder={t('auth.newPasswordPlaceholder')}
                         size="medium"
                         {...register("password")}
                         error={!!errors.password}
@@ -119,9 +121,9 @@ export default function ResetPassword() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Confirm Password"
+                        label={t('labels.confirmPassword')}
                         type="password"
-                        placeholder="Confirm your new password"
+                        placeholder={t('auth.confirmPasswordPlaceholder')}
                         size="medium"
                         {...register("password_confirmation")}
                         error={!!errors.password_confirmation}
@@ -164,7 +166,7 @@ export default function ResetPassword() {
                     {isSubmitting ? (
                         <CircularProgress size={24} sx={{ color: 'white' }} />
                     ) : (
-                        'Reset Password'
+                        t('auth.resetPassword')
                     )}
                 </Button>
             </Stack>
@@ -173,8 +175,8 @@ export default function ResetPassword() {
 
     return (
         <FormLayout
-            title="Reset Password"
-            subtitle="Enter your new password to reset your account"
+            title={t('auth.resetPassword')}
+            subtitle={t('auth.resetSubtitle')}
             children={formContent}
         />
     );

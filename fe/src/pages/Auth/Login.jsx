@@ -5,24 +5,26 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import FormLayout from './layout/FormLayout';
+import { useTranslation } from 'react-i18next';
 
 /* ===== ZOD SCHEMA ===== */
-const loginSchema = z.object({
-    username: z.string().email('Email không hợp lệ'),
-    password: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
+const createLoginSchema = (t) => z.object({
+    username: z.string().email(t('messages.emailInvalid')),
+    password: z.string().min(6, t('messages.min', { field: t('labels.password'), count: 6 })),
     remember: z.boolean().optional(),
 });
 
 export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation('common');
 
     const {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm({
-        resolver: zodResolver(loginSchema),
+        resolver: zodResolver(createLoginSchema(t)),
         defaultValues: {
             username: '',
             password: '',
@@ -46,7 +48,7 @@ export default function Login() {
                     '&:hover': { textDecoration: 'underline' },
                 }}
             >
-                Forgot password?
+                {t('auth.forgotPassword')}
             </Link>
         </Box>
     );
@@ -57,8 +59,8 @@ export default function Login() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Email"
-                        placeholder="Enter your email"
+                        label={t('labels.email')}
+                        placeholder={t('auth.emailPlaceholder')}
                         size="medium"
                         {...register('username')}
                         error={!!errors.username}
@@ -79,9 +81,9 @@ export default function Login() {
                 <Box>
                     <TextField
                         fullWidth
-                        label="Password"
+                        label={t('labels.password')}
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder={t('auth.passwordPlaceholder')}
                         size="medium"
                         {...register('password')}
                         error={!!errors.password}
@@ -110,7 +112,7 @@ export default function Login() {
                             }}
                         />
                     }
-                    label="Remember me"
+                    label={t('auth.rememberMe')}
                     sx={{
                         mb: 0.5,
                         '& .MuiFormControlLabel-label': {
@@ -146,7 +148,7 @@ export default function Login() {
                     {isSubmitting ? (
                         <CircularProgress size={24} sx={{ color: 'white' }} />
                     ) : (
-                        'Sign In'
+                        t('auth.signIn')
                     )}
                 </Button>
             </Stack>
@@ -155,7 +157,7 @@ export default function Login() {
 
     const footerText = (
         <>
-            Don't have an account?{' '}
+            {t('auth.dontHaveAccount')}{' '}
             <Link
                 href="/auth/register"
                 sx={{
@@ -165,15 +167,15 @@ export default function Login() {
                     '&:hover': { textDecoration: 'underline' },
                 }}
             >
-                Sign up
+                {t('auth.signUp')}
             </Link>
         </>
     );
 
     return (
         <FormLayout
-            title="Welcome Back!"
-            subtitle="Sign in to continue to your account"
+            title={t('auth.welcomeBack')}
+            subtitle={t('auth.signInSubtitle')}
             headerChildren={headerChildren}
             children={formContent}
             showDivider

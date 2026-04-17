@@ -9,13 +9,15 @@ import OrganizationAddModal from './OrganizationAddModal';
 import getColumns from './OrganizationColumns';
 import { getBreadcrumbs } from './OrganizationBreadcrumb';
 import { bulkDestroy, getAll, storage, update } from './OrganizationServices';
+import { useTranslation } from 'react-i18next';
 
 const STORAGE_KEY = 'list-view-options:organization';
 
 const Organization = () => {
     const { showLoading, hideLoading, showNotification, openModal, closeModal, showConfirm, closeConfirm } = useGlobalContext();
-    const columns = useMemo(() => getColumns(), []);
-    const breadcrumbs = getBreadcrumbs();
+    const { t } = useTranslation(['dashboard', 'common']);
+    const columns = useMemo(() => getColumns(t), [t]);
+    const breadcrumbs = getBreadcrumbs(t);
 
     const showOptionColumns = useMemo(
         () =>
@@ -74,7 +76,7 @@ const Organization = () => {
             setRowCount(res.data.meta.total);
             setSelectedRows(new Set());
         } catch (err) {
-            showNotification(err.response?.data?.message || 'Failed to load organizations', 'error');
+            showNotification(err.response?.data?.message || t('messages.loadOrganizationsFailed', { ns: 'common' }), 'error');
         } finally {
             hideLoading();
         }
@@ -84,7 +86,7 @@ const Organization = () => {
         setRows((prev) => prev.map((row) => (row.id === oldRow.id ? newRow : row)));
 
         update(newRow.id, newRow)
-            .then(() => showNotification('Updated successfully', 'success'))
+            .then(() => showNotification(t('messages.updated', { ns: 'common' }), 'success'))
             .catch((err) => showNotification(err.response?.data?.message || err.message, 'error'));
 
         return newRow;
@@ -97,17 +99,17 @@ const Organization = () => {
 
     const handleAdd = () => {
         openModal(
-            'Add Organization',
+            t('pages.organization.add'),
             <OrganizationAddModal
                 onSubmit={(data) => {
                     showLoading();
                     storage(data)
                         .then(() => {
-                            showNotification('Created successfully', 'success');
+                            showNotification(t('messages.created', { ns: 'common' }), 'success');
                             loadData();
                             closeModal();
                         })
-                        .catch((err) => showNotification(err.response?.data?.message || 'Create failed', 'error'))
+                        .catch((err) => showNotification(err.response?.data?.message || t('messages.createFailed', { ns: 'common' }), 'error'))
                         .finally(hideLoading);
                 }}
                 onClose={closeModal}
@@ -117,13 +119,13 @@ const Organization = () => {
 
     const handleDelete = () => {
         showConfirm(
-            'Confirm deletion',
-            `Delete ${selectedRows.size} organization(s)?`,
+            t('messages.confirmDeletion', { ns: 'common' }),
+            t('messages.deleteOrganizations', { ns: 'common', count: selectedRows.size }),
             async () => {
                 showLoading();
                 try {
                     await bulkDestroy(Array.from(selectedRows));
-                    showNotification('Deleted successfully', 'success');
+                    showNotification(t('messages.deleted', { ns: 'common' }), 'success');
                     closeConfirm();
                     loadData();
                 } catch (err) {
@@ -138,7 +140,7 @@ const Organization = () => {
 
     return (
         <MainCard breadcrumbs={breadcrumbs} totalCount={rowCount}>
-            <MetaData title='Organization Management' description='Organization management page' />
+            <MetaData title={t('pages.organization.title')} description={t('pages.organization.description')} />
 
             <Toolbar
                 loadData={loadData}
@@ -180,5 +182,3 @@ const Organization = () => {
 };
 
 export default Organization;
-
-

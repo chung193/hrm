@@ -1,6 +1,7 @@
 import { Box, Divider, Typography, Stack } from '@mui/material';
 import SocialButtons from './SocialButtons';
 import FormHeader from './FormHeader';
+import { useTranslation } from 'react-i18next';
 
 export default function FormLayout({
     title,
@@ -11,6 +12,8 @@ export default function FormLayout({
     showSocialButtons = false,
     showDivider = false,
 }) {
+    const { t } = useTranslation('common');
+
     return (
         <Stack spacing={3}>
             {/* Header Section */}
@@ -27,7 +30,7 @@ export default function FormLayout({
             {showDivider && (
                 <Divider sx={{ my: 1 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
-                        Sign in with
+                        {t('signInWith')}
                     </Typography>
                 </Divider>
             )}

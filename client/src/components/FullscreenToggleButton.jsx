@@ -56,7 +56,7 @@ export default function FullscreenToggleButton({ targetRef, ...props }) {
     }, [enter, exit]);
 
     return (
-        <Tooltip title={isFs ? 'Thoát fullscreen' : 'Fullscreen'}>
+        <Tooltip title={isFs ? 'Thoát toàn màn hình' : 'Toàn màn hình'}>
             <IconButton onClick={toggle} {...props}>
                 {isFs ? <FullscreenExitIcon /> : <FullscreenIcon />}
             </IconButton>

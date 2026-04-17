@@ -167,8 +167,8 @@ const Role = () => {
             totalCount={rowCount}
         >
             <MetaData
-                title="Role Management"
-                description="Role management page"
+                title={t('pages.role.title')}
+                description={t('pages.role.description')}
             />
             <Toolbar
                 loadData={loadData}
@@ -225,4 +225,3 @@ const Role = () => {
 };
 
 export default Role;
-

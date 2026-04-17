@@ -3,15 +3,17 @@ import { Box, Button, Checkbox, FormControlLabel, MenuItem, Stack, TextField } f
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
-const schema = z.object({
-    organization_id: z.coerce.number().int().positive('Organization is required'),
-    code: z.string().min(1, 'Code is required').max(50),
-    name: z.string().min(1, 'Name is required').max(255),
+const createSchema = (t) => z.object({
+    organization_id: z.coerce.number().int().positive(t('messages.required', { ns: 'common', field: t('labels.organization', { ns: 'common' }) })),
+    code: z.string().min(1, t('messages.required', { ns: 'common', field: t('labels.code', { ns: 'common' }) })).max(50),
+    name: z.string().min(1, t('messages.required', { ns: 'common', field: t('labels.name', { ns: 'common' }) })).max(255),
     is_active: z.boolean().optional(),
 });
 
 const DepartmentAddModal = ({ organizations = [], onSubmit, onClose, scopedOrganizationId = null }) => {
+    const { t } = useTranslation(['dashboard', 'common']);
     const isScoped = Number(scopedOrganizationId || 0) > 0;
     const scopedOrganization = organizations.find((item) => Number(item.id) === Number(scopedOrganizationId));
 
@@ -21,7 +23,7 @@ const DepartmentAddModal = ({ organizations = [], onSubmit, onClose, scopedOrgan
         setValue,
         formState: { errors, isSubmitting },
     } = useForm({
-        resolver: zodResolver(schema),
+        resolver: zodResolver(createSchema(t)),
         defaultValues: {
             organization_id: scopedOrganizationId || organizations[0]?.id || '',
             code: '',
@@ -41,7 +43,7 @@ const DepartmentAddModal = ({ organizations = [], onSubmit, onClose, scopedOrgan
             <Stack spacing={2}>
                 {isScoped ? (
                     <TextField
-                        label='Organization'
+                        label={t('labels.organization', { ns: 'common' })}
                         size='small'
                         fullWidth
                         value={scopedOrganization?.name || ''}
@@ -50,7 +52,7 @@ const DepartmentAddModal = ({ organizations = [], onSubmit, onClose, scopedOrgan
                 ) : (
                     <TextField
                         select
-                        label='Organization'
+                        label={t('labels.organization', { ns: 'common' })}
                         size='small'
                         fullWidth
                         defaultValue={organizations[0]?.id || ''}
@@ -66,16 +68,16 @@ const DepartmentAddModal = ({ organizations = [], onSubmit, onClose, scopedOrgan
                     </TextField>
                 )}
 
-                <TextField label='Code' fullWidth size='small' {...register('code')} error={!!errors.code} helperText={errors.code?.message} />
-                <TextField label='Name' fullWidth size='small' {...register('name')} error={!!errors.name} helperText={errors.name?.message} />
-                <FormControlLabel control={<Checkbox {...register('is_active')} defaultChecked />} label='Active' />
+                <TextField label={t('labels.code', { ns: 'common' })} fullWidth size='small' {...register('code')} error={!!errors.code} helperText={errors.code?.message} />
+                <TextField label={t('labels.name', { ns: 'common' })} fullWidth size='small' {...register('name')} error={!!errors.name} helperText={errors.name?.message} />
+                <FormControlLabel control={<Checkbox {...register('is_active')} defaultChecked />} label={t('active', { ns: 'common' })} />
 
                 <Stack direction='row' justifyContent='flex-end' spacing={1}>
                     <Button type='button' variant='outlined' onClick={onClose} disabled={isSubmitting}>
-                        Close
+                        {t('close', { ns: 'common' })}
                     </Button>
                     <Button type='submit' variant='contained' disabled={isSubmitting}>
-                        Save
+                        {t('save', { ns: 'common' })}
                     </Button>
                 </Stack>
             </Stack>

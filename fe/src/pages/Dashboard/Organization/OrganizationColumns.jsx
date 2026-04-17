@@ -1,9 +1,9 @@
 ﻿import { Chip } from '@mui/material';
 
-const getColumns = () => [
+const getColumns = (t) => [
     {
         field: 'stt',
-        headerName: 'No.',
+        headerName: t('labels.no', { ns: 'common' }),
         width: 80,
         sortable: false,
         filterable: false,
@@ -15,17 +15,17 @@ const getColumns = () => [
             return page * pageSize + indexInPage;
         },
     },
-    { field: 'code', headerName: 'Code', width: 160, editable: true },
-    { field: 'name', headerName: 'Name', width: 240, editable: true },
+    { field: 'code', headerName: t('labels.code', { ns: 'common' }), width: 160, editable: true },
+    { field: 'name', headerName: t('labels.name', { ns: 'common' }), width: 240, editable: true },
     {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('labels.status', { ns: 'common' }),
         width: 140,
         type: 'boolean',
         editable: true,
         renderCell: (params) => (
             <Chip
-                label={params.value ? 'Active' : 'Inactive'}
+                label={params.value ? t('active', { ns: 'common' }) : t('inactive', { ns: 'common' })}
                 color={params.value ? 'success' : 'default'}
                 variant='outlined'
                 size='small'
@@ -34,13 +34,13 @@ const getColumns = () => [
     },
     {
         field: 'created_at',
-        headerName: 'Created At',
+        headerName: t('labels.createdAt', { ns: 'common' }),
         width: 200,
         renderCell: (params) => (params.value ? new Date(params.value).toLocaleString() : ''),
     },
     {
         field: 'updated_at',
-        headerName: 'Updated At',
+        headerName: t('labels.updatedAt', { ns: 'common' }),
         width: 200,
         renderCell: (params) => (params.value ? new Date(params.value).toLocaleString() : ''),
     },

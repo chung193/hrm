@@ -1,9 +1,9 @@
 ﻿import { Chip } from '@mui/material';
 
-const getColumns = () => [
+const getColumns = (t) => [
     {
         field: 'stt',
-        headerName: 'No.',
+        headerName: t('labels.no', { ns: 'common' }),
         width: 80,
         sortable: false,
         filterable: false,
@@ -15,48 +15,48 @@ const getColumns = () => [
             return page * pageSize + indexInPage;
         },
     },
-    { field: 'department_id', headerName: 'Department ID', width: 130, editable: true, type: 'number' },
+    { field: 'department_id', headerName: t('pages.departmentTitle.table.departmentId'), width: 130, editable: true, type: 'number' },
     {
         field: 'department_name',
-        headerName: 'Department',
+        headerName: t('labels.department', { ns: 'common' }),
         width: 220,
         valueGetter: (_, row) => row.department?.name || '',
     },
-    { field: 'code', headerName: 'Code', width: 160, editable: true },
-    { field: 'name', headerName: 'Name', width: 220, editable: true },
+    { field: 'code', headerName: t('labels.code', { ns: 'common' }), width: 160, editable: true },
+    { field: 'name', headerName: t('labels.name', { ns: 'common' }), width: 220, editable: true },
     {
         field: 'can_request_recruitment',
-        headerName: 'Can Request',
+        headerName: t('pages.departmentTitle.table.canRequest'),
         width: 140,
         editable: true,
         type: 'boolean',
         renderCell: (params) => (
-            <Chip label={params.value ? 'Yes' : 'No'} color={params.value ? 'primary' : 'default'} variant='outlined' size='small' />
+            <Chip label={params.value ? t('yes', { ns: 'common' }) : t('no', { ns: 'common' })} color={params.value ? 'primary' : 'default'} variant='outlined' size='small' />
         ),
     },
     {
         field: 'can_approve_leave',
-        headerName: 'Can Approve Leave',
+        headerName: t('pages.departmentTitle.table.canApproveLeave'),
         width: 160,
         editable: true,
         type: 'boolean',
         renderCell: (params) => (
-            <Chip label={params.value ? 'Yes' : 'No'} color={params.value ? 'secondary' : 'default'} variant='outlined' size='small' />
+            <Chip label={params.value ? t('yes', { ns: 'common' }) : t('no', { ns: 'common' })} color={params.value ? 'secondary' : 'default'} variant='outlined' size='small' />
         ),
     },
     {
         field: 'is_active',
-        headerName: 'Status',
+        headerName: t('labels.status', { ns: 'common' }),
         width: 140,
         editable: true,
         type: 'boolean',
         renderCell: (params) => (
-            <Chip label={params.value ? 'Active' : 'Inactive'} color={params.value ? 'success' : 'default'} variant='outlined' size='small' />
+            <Chip label={params.value ? t('active', { ns: 'common' }) : t('inactive', { ns: 'common' })} color={params.value ? 'success' : 'default'} variant='outlined' size='small' />
         ),
     },
     {
         field: 'created_at',
-        headerName: 'Created At',
+        headerName: t('labels.createdAt', { ns: 'common' }),
         width: 200,
         renderCell: (params) => (params.value ? new Date(params.value).toLocaleString() : ''),
     },

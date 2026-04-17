@@ -174,12 +174,12 @@ class AssetAssignmentService extends BaseService implements AssetAssignmentServi
             if ($assignment->user) {
                 $this->notificationService->notifyUser($assignment->user, [
                     'kind' => 'asset_recall',
-                    'title' => 'Yeu cau thu hoi tai san',
+                    'title' => 'Yêu cầu thu hồi tài sản',
                     'message' => sprintf(
-                        'Tai san %s - %s da duoc yeu cau thu hoi.%s',
+                        'Tài sản %s - %s đã được yêu cầu thu hồi.%s',
                         $assignment->asset?->asset_code ?: 'N/A',
-                        $assignment->asset?->name ?: 'Tai san',
-                        !empty($payload['recall_note']) ? ' Ghi chu: '.$payload['recall_note'] : ''
+                        $assignment->asset?->name ?: 'Tài sản',
+                        !empty($payload['recall_note']) ? ' Ghi chú: '.$payload['recall_note'] : ''
                     ),
                     'action_url' => '/dashboard/asset-management',
                     'organization_id' => $assignment->organization_id,

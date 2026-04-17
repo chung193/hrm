@@ -57,10 +57,10 @@ const getColumns = (t) => [
         editable: true,
         renderCell: (params) => {
             if (!params.value) {
-                return <Chip label="Inactive" color="secondary" size="small" />;
+                return <Chip label={t('inactive', { ns: 'common' })} color="secondary" size="small" />;
             }
 
-            return <Chip label="Active" color="success" size="small" />;
+            return <Chip label={t('active', { ns: 'common' })} color="success" size="small" />;
         },
     },
     {
@@ -72,7 +72,7 @@ const getColumns = (t) => [
             const roles = Array.isArray(params.value) ? params.value : [];
 
             if (roles.length === 0) {
-                return 'Not assigned';
+                return t('notAssigned', { ns: 'common' });
             }
 
             return (
