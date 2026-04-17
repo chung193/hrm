@@ -110,7 +110,12 @@ export const subscribeToConversationPresence = (conversationId, handlers = {}) =
         return { unsubscribe: () => {}, whisperTyping: () => {} };
     }
 
+    const messageChannel = echo.private(`chat.conversation.${conversationId}`);
     const channel = echo.join(`chat.presence.${conversationId}`);
+
+    if (typeof handlers.onMessageCreated === 'function') {
+        messageChannel.listen('.chat.message.created', handlers.onMessageCreated);
+    }
 
     if (typeof handlers.onHere === 'function') {
         channel.here(handlers.onHere);
@@ -131,6 +136,7 @@ export const subscribeToConversationPresence = (conversationId, handlers = {}) =
     return {
         whisperTyping: (payload) => channel.whisper('typing', payload),
         unsubscribe: () => {
+            echo.leave(`private-chat.conversation.${conversationId}`);
             echo.leave(`presence-chat.presence.${conversationId}`);
         },
     };

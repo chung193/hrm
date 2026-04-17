@@ -20,10 +20,18 @@ class ChatMessageCreated implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        return array_map(
+        $conversationId = (int) ($this->conversation['id'] ?? 0);
+
+        $channels = array_map(
             fn (int $userId) => new PrivateChannel("App.Models.User.{$userId}"),
             $this->participantIds
         );
+
+        if ($conversationId > 0) {
+            $channels[] = new PrivateChannel("chat.conversation.{$conversationId}");
+        }
+
+        return $channels;
     }
 
     public function broadcastAs(): string

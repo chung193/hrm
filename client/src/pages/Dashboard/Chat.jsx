@@ -403,6 +403,15 @@ export default function Chat({ mode = 'direct' }) {
         }
 
         const subscription = subscribeToConversationPresence(activeConversationId, {
+            onMessageCreated: ({ conversation, message }) => {
+                if (conversation?.id) {
+                    setConversations((prev) => [conversation, ...prev.filter((item) => Number(item.id) !== Number(conversation.id))]);
+                }
+
+                if (message?.id && Number(message.conversation_id) === Number(activeConversationId)) {
+                    setMessages((prev) => appendUniqueMessage(prev, message));
+                }
+            },
             onHere: (members) => {
                 setPresenceMembers(members || []);
             },

@@ -3,6 +3,7 @@
 namespace App\Services\Concretes;
 
 use App\Http\Resources\Api\User\UserResource;
+use App\Models\Organization;
 use App\Models\User;
 use App\Repositories\User\Contracts\UserRepositoryInterface;
 use App\Services\Base\Concretes\BaseService;
@@ -11,10 +12,10 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Exceptions\JWTException;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthService extends BaseService implements AuthServiceInterface
 {
@@ -41,6 +42,7 @@ class AuthService extends BaseService implements AuthServiceInterface
         ]);
         $user->assignRole('client');
         $user->sendEmailVerificationNotification();
+
         return $this->prepareUserWithToken($user);
     }
 
@@ -53,6 +55,9 @@ class AuthService extends BaseService implements AuthServiceInterface
      */
     public function login(array $credentials): array
     {
+        $requestedOrganizationId = isset($credentials['organization_id']) ? (int) $credentials['organization_id'] : 0;
+        unset($credentials['organization_id']);
+
         if (! $token = auth()->attempt($credentials)) {
             throw new AuthenticationException('Invalid credentials');
         }
@@ -65,12 +70,32 @@ class AuthService extends BaseService implements AuthServiceInterface
             throw new AuthenticationException('Your account is inactive');
         }
 
+        if ($requestedOrganizationId > 0) {
+            $organizationExists = Organization::query()
+                ->where('id', $requestedOrganizationId)
+                ->where('is_active', true)
+                ->exists();
+
+            $userOrganizationId = (int) ($user->detail?->organization_id ?? 0);
+            $isAdmin = method_exists($user, 'isAdmin') ? (bool) $user->isAdmin() : false;
+
+            if (! $organizationExists) {
+                auth()->logout();
+                throw new AuthenticationException('Selected organization is invalid.');
+            }
+
+            if (! $isAdmin && $userOrganizationId !== $requestedOrganizationId) {
+                auth()->logout();
+                throw new AuthenticationException('You cannot sign in to another organization.');
+            }
+        }
+
         return $this->prepareUserWithToken($user, $token);
     }
 
     public function forgot($email): string
     {
-        return  Password::sendResetLink(
+        return Password::sendResetLink(
             $email
         );
     }
@@ -130,7 +155,7 @@ class AuthService extends BaseService implements AuthServiceInterface
 
             return $token;
         } catch (JWTException $e) {
-            throw new AuthenticationException('Failed to refresh token: ' . $e->getMessage());
+            throw new AuthenticationException('Failed to refresh token: '.$e->getMessage());
         }
     }
 

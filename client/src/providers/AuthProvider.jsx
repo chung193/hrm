@@ -33,11 +33,16 @@ export function AuthProvider({ children }) {
         return response
     };
 
-    const login = async (username, password) => {
+    const login = async (username, password, organizationId = null) => {
         showLoading();
         try {
             disconnectEcho();
-            const res = await loginApi({ email: username, password });
+            const payload = { email: username, password };
+            if (organizationId) {
+                payload.organization_id = Number(organizationId);
+            }
+
+            const res = await loginApi(payload);
             const authenticatedUser = {
                 id: res.data.data.user.id,
                 name: res.data.data.user.name,
@@ -46,6 +51,11 @@ export function AuthProvider({ children }) {
             };
             setUser(authenticatedUser);
             localStorage.setItem('user', JSON.stringify(authenticatedUser));
+            if (organizationId) {
+                localStorage.setItem(ORGANIZATION_SCOPE_STORAGE_KEY, String(Number(organizationId)));
+            } else {
+                localStorage.removeItem(ORGANIZATION_SCOPE_STORAGE_KEY);
+            }
             window.dispatchEvent(new Event('auth-user-changed'));
             navigate(from, { replace: true });
         } catch (err) {
