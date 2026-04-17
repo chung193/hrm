@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+    Autocomplete,
     Box,
     Button,
     Checkbox,
@@ -23,7 +24,9 @@ import { saveAs } from 'file-saver';
 import QRCode from 'qrcode';
 import MainCard from '@components/MainCard';
 import MetaData from '@components/MetaData';
+import Toolbar from '@components/ToolBar';
 import { useGlobalContext } from '@providers/GlobalProvider';
+import { getMediaUrl } from '@utils/mediaUrl';
 import { loadListViewOptions, saveListViewOptions } from '@utils/listViewOptions';
 import { getAllSimple as getDepartmentsSimple } from '@pages/Dashboard/Department/DepartmentServices';
 import { getAllSimple as getUsersSimple } from '@pages/Dashboard/User/UserServices';
@@ -110,6 +113,11 @@ const QrThumb = ({ value, size = 40 }) => {
             return;
         }
 
+        if (typeof value === 'string' && (value.startsWith('data:image/') || value.startsWith('http://') || value.startsWith('https://'))) {
+            setSrc(value);
+            return;
+        }
+
         QRCode.toDataURL(String(value), {
             width: size * 2,
             margin: 1,
@@ -125,7 +133,11 @@ const QrThumb = ({ value, size = 40 }) => {
     return <Box component='img' alt='QR' src={src} sx={{ width: size, height: size, border: '1px solid', borderColor: 'divider', borderRadius: 1 }} />;
 };
 
-const AssetThumb = ({ src, size = 44 }) => {
+const getQrValue = (asset) => asset?.qr_code || asset?.asset_code || '';
+
+const AssetThumb = ({ src, size = 36 }) => {
+    const resolvedSrc = getMediaUrl(src);
+
     if (!src) {
         return (
             <Box
@@ -147,7 +159,7 @@ const AssetThumb = ({ src, size = 44 }) => {
         );
     }
 
-    return <Box component='img' alt='Asset' src={src} sx={{ width: size, height: size, border: '1px solid', borderColor: 'divider', borderRadius: 1.5, objectFit: 'cover' }} />;
+    return <Box component='img' alt='Asset' src={resolvedSrc} sx={{ width: size, height: size, border: '1px solid', borderColor: 'divider', borderRadius: 1.5, objectFit: 'cover', display: 'block', bgcolor: 'background.paper' }} />;
 };
 
 const createAuditItemFromAsset = (asset, existingItem = null) => ({
@@ -216,6 +228,20 @@ const getAuditChipColor = (value) => ({
     completed: 'success',
 }[value] || 'default');
 
+const actionButtonSx = {
+    textTransform: 'none',
+    minWidth: { xs: '100%', sm: 'auto' },
+};
+
+const formSectionSx = {
+    p: 2,
+    border: '1px solid',
+    borderColor: 'divider',
+    borderRadius: 2.5,
+    bgcolor: 'background.paper',
+    height: '100%',
+};
+
 export default function AssetManagement() {
     const { showLoading, hideLoading, showNotification, showConfirm, closeConfirm } = useGlobalContext();
     const savedViewOptions = useMemo(
@@ -258,7 +284,7 @@ export default function AssetManagement() {
         });
     };
 
-    const loadTab = async (currentTab = tab, currentKeyword = keyword) => {
+    const loadTab = async (currentTab = tab, currentKeyword = keyword, overrides = {}) => {
         if (currentTab === 'reports') {
             const reportRes = await getAssetReportOverview();
             setReport(reportRes.data.data || reportRes.data);
@@ -276,11 +302,14 @@ export default function AssetManagement() {
         const res = await map[currentTab]({
             keyword: currentKeyword,
             per_page: 100,
-            ...(currentTab === 'assets' ? assetFilters : {}),
-            ...(currentTab === 'maintenances' ? maintenanceFilters : {}),
-            ...(currentTab === 'audits' ? auditFilters : {}),
-            ...(currentTab === 'assets' && assetSortModel[0]
-                ? { sort_field: assetSortModel[0].field, sort_direction: assetSortModel[0].sort }
+            ...(currentTab === 'assets' ? (overrides.assetFilters || assetFilters) : {}),
+            ...(currentTab === 'maintenances' ? (overrides.maintenanceFilters || maintenanceFilters) : {}),
+            ...(currentTab === 'audits' ? (overrides.auditFilters || auditFilters) : {}),
+            ...(currentTab === 'assets' && (overrides.assetSortModel || assetSortModel)[0]
+                ? {
+                    sort_field: (overrides.assetSortModel || assetSortModel)[0].field,
+                    sort_direction: (overrides.assetSortModel || assetSortModel)[0].sort,
+                }
                 : {}),
         });
         setRows((prev) => ({ ...prev, [currentTab]: res.data.data || [] }));
@@ -314,6 +343,41 @@ export default function AssetManagement() {
     const selectedCategory = useMemo(
         () => options.categories.find((item) => Number(item.id) === Number(form.category_id)),
         [options.categories, form.category_id]
+    );
+
+    const selectedAssetCategoryOption = useMemo(
+        () => options.categories.find((item) => Number(item.id) === Number(form.category_id)) || null,
+        [options.categories, form.category_id]
+    );
+
+    const selectedDepartmentOption = useMemo(
+        () => options.departments.find((item) => Number(item.id) === Number(form.department_id)) || null,
+        [options.departments, form.department_id]
+    );
+
+    const selectedAssignmentAssetOption = useMemo(
+        () => options.assets.find((item) => Number(item.id) === Number(form.asset_id)) || null,
+        [options.assets, form.asset_id]
+    );
+
+    const selectedAssignmentUserOption = useMemo(
+        () => options.users.find((item) => Number(item.id) === Number(form.user_id)) || null,
+        [options.users, form.user_id]
+    );
+
+    const selectedAssignmentDepartmentOption = useMemo(
+        () => options.departments.find((item) => Number(item.id) === Number(form.department_id)) || null,
+        [options.departments, form.department_id]
+    );
+
+    const selectedMaintenanceAssetOption = useMemo(
+        () => options.assets.find((item) => Number(item.id) === Number(form.asset_id)) || null,
+        [options.assets, form.asset_id]
+    );
+
+    const selectedAuditDepartmentOption = useMemo(
+        () => options.departments.find((item) => Number(item.id) === Number(form.department_id)) || null,
+        [options.departments, form.department_id]
     );
 
     const categoryCustomFields = useMemo(() => {
@@ -413,17 +477,16 @@ export default function AssetManagement() {
                         <Tooltip
                             placement='right'
                             arrow
-                            title={params.row.image_url ? <Box component='img' src={params.row.image_url} alt='Asset Preview' sx={{ width: 220, height: 220, objectFit: 'cover', borderRadius: 1 }} /> : 'No image'}
+                            title={params.row.image_url ? <Box component='img' src={getMediaUrl(params.row.image_url)} alt='Asset Preview' sx={{ width: 220, height: 220, objectFit: 'cover', borderRadius: 1 }} /> : 'No image'}
                         >
-                            <Box onClick={() => params.row.image_url && setImagePreview({ open: true, src: params.row.image_url, title: params.row.name || 'Asset image' })} sx={{ cursor: params.row.image_url ? 'zoom-in' : 'default' }}>
+                            <Box onClick={() => params.row.image_url && setImagePreview({ open: true, src: getMediaUrl(params.row.image_url), title: params.row.name || 'Asset image' })} sx={{ cursor: params.row.image_url ? 'zoom-in' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 40 }}>
                                 <AssetThumb src={params.row.image_thumb_url || params.row.image_url} />
                             </Box>
                         </Tooltip>
-                        {params.row.image_thumb_url || params.row.image_url ? <Chip size='small' color='primary' variant='outlined' label='Primary' /> : null}
                     </Stack>
                 ),
             },
-            { field: 'qr_preview', headerName: 'QR', width: 90, sortable: false, renderCell: (params) => <QrThumb value={params.row.qr_image || params.row.qr_code} /> },
+            { field: 'qr_preview', headerName: 'QR', width: 90, sortable: false, renderCell: (params) => <QrThumb value={getQrValue(params.row)} /> },
             { field: 'asset_code', headerName: 'Asset Code', width: 140 },
             { field: 'qr_code', headerName: 'QR Code', width: 140 },
             { field: 'name', headerName: 'Name', width: 220 },
@@ -672,21 +735,30 @@ export default function AssetManagement() {
         setDetailAsset(res.data.data || res.data);
     };
 
-    const handleDownloadQr = (asset) => {
-        const src = asset?.qr_image || '';
-        if (!src) {
+    const handleDownloadQr = async (asset) => {
+        const qrValue = getQrValue(asset);
+        if (!qrValue) {
             showNotification('No QR image available', 'error');
             return;
         }
 
+        const src = await QRCode.toDataURL(qrValue, { width: 640, margin: 1 });
         const link = document.createElement('a');
         link.href = src;
         link.download = `${asset.asset_code || asset.qr_code || 'asset-qr'}.png`;
         link.click();
     };
 
-    const handlePrintQr = (assetsToPrint) => {
-        const printableAssets = assetsToPrint.filter((asset) => asset?.qr_image);
+    const handlePrintQr = async (assetsToPrint) => {
+        const printableAssets = await Promise.all(
+            assetsToPrint
+                .filter((asset) => getQrValue(asset))
+                .map(async (asset) => ({
+                    ...asset,
+                    generated_qr_image: await QRCode.toDataURL(getQrValue(asset), { width: 640, margin: 1 }),
+                }))
+        );
+
         if (printableAssets.length === 0) {
             showNotification('No QR image available to print', 'error');
             return;
@@ -715,7 +787,7 @@ export default function AssetManagement() {
                     <div class="grid">
                         ${printableAssets.map((asset) => `
                             <div class="item">
-                                <img src="${asset.qr_image}" alt="QR" />
+                                <img src="${asset.generated_qr_image}" alt="QR" />
                                 <div class="code">${asset.asset_code || asset.qr_code || ''}</div>
                                 <div class="name">${asset.name || ''}</div>
                             </div>
@@ -1020,11 +1092,6 @@ export default function AssetManagement() {
     const handleSubmit = async () => {
         showLoading();
         try {
-            const qrValue = form.qr_code || form.asset_code;
-            const qrImage = tab === 'assets' && qrValue
-                ? await QRCode.toDataURL(qrValue, { width: 320, margin: 1 })
-                : null;
-
             if (tab === 'categories') {
                 const payload = {
                     parent_id: form.parent_id || null,
@@ -1046,7 +1113,7 @@ export default function AssetManagement() {
                 const custom = parseJson(form.custom_field_values, {}, 'Custom field values');
                 if (form.image) {
                     const fd = new FormData();
-                    [['category_id', form.category_id], ['department_id', form.department_id], ['asset_code', form.asset_code], ['qr_code', form.qr_code || form.asset_code], ['qr_image', qrImage], ['name', form.name], ['purchase_date', form.purchase_date], ['purchase_price', form.purchase_price], ['warranty_end_date', form.warranty_end_date], ['condition_status', form.condition_status], ['location_status', form.location_status], ['is_active', form.is_active ? '1' : '0']].forEach(([key, value]) => {
+                    [['category_id', form.category_id], ['department_id', form.department_id], ['asset_code', form.asset_code], ['qr_code', form.qr_code || form.asset_code], ['name', form.name], ['purchase_date', form.purchase_date], ['purchase_price', form.purchase_price], ['warranty_end_date', form.warranty_end_date], ['condition_status', form.condition_status], ['location_status', form.location_status], ['is_active', form.is_active ? '1' : '0']].forEach(([key, value]) => {
                         if (value) fd.append(key, value);
                     });
                     Object.entries(specs).forEach(([key, value]) => fd.append(`specifications[${key}]`, value));
@@ -1064,7 +1131,6 @@ export default function AssetManagement() {
                         department_id: form.department_id || null,
                         asset_code: form.asset_code,
                         qr_code: form.qr_code || form.asset_code,
-                        qr_image: qrImage,
                         name: form.name,
                         purchase_date: form.purchase_date || null,
                         purchase_price: form.purchase_price || null,
@@ -1141,10 +1207,15 @@ export default function AssetManagement() {
                     notes: form.notes || null,
                     items: (form.items || [])
                         .filter((item) => item.included)
-                        .map(({ included, ...item }) => ({
-                            ...item,
-                            notes: item.notes || null,
-                        })),
+                        .map((item) => {
+                            const payloadItem = { ...item };
+                            delete payloadItem.included;
+
+                            return {
+                                ...payloadItem,
+                                notes: payloadItem.notes || null,
+                            };
+                        }),
                 };
                 if (editingRecord) {
                     await updateAssetAudit(editingRecord.id, payload);
@@ -1153,10 +1224,35 @@ export default function AssetManagement() {
                 }
             }
 
-            showNotification(editingRecord ? 'Updated successfully' : 'Created successfully', 'success');
+            const isCreatingAsset = tab === 'assets' && !editingRecord;
+            const resetAssetFilters = { ...DEFAULT_ASSET_VIEW_OPTIONS.assetFilters };
+            const resetAssetSortModel = [...DEFAULT_ASSET_VIEW_OPTIONS.assetSortModel];
+
+            showNotification(
+                isCreatingAsset
+                    ? 'Đã tạo tài sản và làm mới danh sách hiển thị.'
+                    : editingRecord
+                        ? 'Updated successfully'
+                        : 'Created successfully',
+                'success'
+            );
             setOpen(false);
             setEditingRecord(null);
-            await Promise.all([loadTab(tab), loadOptions()]);
+
+            if (isCreatingAsset) {
+                setKeyword(DEFAULT_ASSET_VIEW_OPTIONS.assetKeyword);
+                setAssetFilters(resetAssetFilters);
+                setAssetSortModel(resetAssetSortModel);
+                await Promise.all([
+                    loadTab('assets', DEFAULT_ASSET_VIEW_OPTIONS.assetKeyword, {
+                        assetFilters: resetAssetFilters,
+                        assetSortModel: resetAssetSortModel,
+                    }),
+                    loadOptions(),
+                ]);
+            } else {
+                await Promise.all([loadTab(tab), loadOptions()]);
+            }
         } catch (err) {
             showNotification(err.response?.data?.message || err.message || 'Save failed', 'error');
         } finally {
@@ -1167,12 +1263,130 @@ export default function AssetManagement() {
     const renderForm = () => {
         if (tab === 'categories') {
             return (
-                <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                    <Grid item xs={12} md={6}><TextField label='Code' fullWidth size='small' value={form.code} onChange={(e) => setForm((p) => ({ ...p, code: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={6}><TextField label='Name' fullWidth size='small' value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} /></Grid>
-                    <Grid item xs={12}><TextField select label='Parent Category' fullWidth size='small' value={form.parent_id} onChange={(e) => setForm((p) => ({ ...p, parent_id: e.target.value }))}><MenuItem value=''>None</MenuItem>{options.categories.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12}><TextField label='Custom Field Schema (JSON array)' fullWidth size='small' multiline minRows={4} value={form.custom_field_schema} onChange={(e) => setForm((p) => ({ ...p, custom_field_schema: e.target.value }))} /></Grid>
-                    <Grid item xs={12}><FormControlLabel control={<Checkbox checked={!!form.is_active} onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))} />} label='Active' /></Grid>
+                <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+                    <Grid item xs={12} md={7}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Thông tin chính
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Khai báo mã, tên và danh mục cha để dễ tổ chức cây tài sản.
+                                    </Typography>
+                                </Box>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={5}>
+                                        <TextField
+                                            label='Mã danh mục'
+                                            fullWidth
+                                            size='small'
+                                            placeholder='VD: LAPTOP'
+                                            value={form.code}
+                                            onChange={(e) => setForm((p) => ({ ...p, code: e.target.value }))}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={7}>
+                                        <TextField
+                                            label='Tên danh mục'
+                                            fullWidth
+                                            size='small'
+                                            placeholder='Nhập tên hiển thị'
+                                            value={form.name}
+                                            onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            select
+                                            label='Danh mục cha'
+                                            fullWidth
+                                            size='small'
+                                            value={form.parent_id}
+                                            onChange={(e) => setForm((p) => ({ ...p, parent_id: e.target.value }))}
+                                            helperText='Để trống nếu đây là danh mục cấp cao nhất.'
+                                        >
+                                            <MenuItem value=''>Không có</MenuItem>
+                                            {options.categories.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Stack>
+                        </Box>
+                    </Grid>
+
+                    <Grid item xs={12} md={5}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Trạng thái
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Kiểm soát việc danh mục có được sử dụng trong các form tài sản hay không.
+                                    </Typography>
+                                </Box>
+
+                                <Box
+                                    sx={{
+                                        px: 1.5,
+                                        py: 1.25,
+                                        borderRadius: 2,
+                                        border: '1px dashed',
+                                        borderColor: form.is_active ? 'success.main' : 'divider',
+                                        bgcolor: form.is_active ? 'success.lighter' : 'background.default',
+                                    }}
+                                >
+                                    <FormControlLabel
+                                        sx={{ alignItems: 'flex-start', m: 0 }}
+                                        control={
+                                            <Checkbox
+                                                checked={!!form.is_active}
+                                                onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))}
+                                            />
+                                        }
+                                        label={
+                                            <Box>
+                                                <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                    {form.is_active ? 'Đang hoạt động' : 'Tạm ngưng'}
+                                                </Typography>
+                                                <Typography variant='caption' color='text.secondary'>
+                                                    {form.is_active ? 'Danh mục sẽ xuất hiện trong các lựa chọn liên quan.' : 'Danh mục sẽ được ẩn khỏi các lựa chọn mới.'}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
+                                </Box>
+                            </Stack>
+                        </Box>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={1.5}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Trường tuỳ biến
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Định nghĩa thêm các field riêng cho danh mục này dưới dạng mảng JSON.
+                                    </Typography>
+                                </Box>
+
+                                <TextField
+                                    label='Custom field schema (JSON array)'
+                                    fullWidth
+                                    size='small'
+                                    multiline
+                                    minRows={6}
+                                    value={form.custom_field_schema}
+                                    onChange={(e) => setForm((p) => ({ ...p, custom_field_schema: e.target.value }))}
+                                    helperText='Ví dụ: [{"key":"cpu","label":"CPU","type":"text"}]'
+                                />
+                            </Stack>
+                        </Box>
+                    </Grid>
                 </Grid>
             );
         }
@@ -1181,23 +1395,207 @@ export default function AssetManagement() {
             const customFieldValues = parseJson(form.custom_field_values || '{}', {}, 'Custom field values');
 
             return (
-                <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                    <Grid item xs={12} md={6}><TextField select label='Category' fullWidth size='small' value={form.category_id} onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))}><MenuItem value=''>None</MenuItem>{options.categories.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={6}><TextField select label='Department' fullWidth size='small' value={form.department_id} onChange={(e) => setForm((p) => ({ ...p, department_id: e.target.value }))}><MenuItem value=''>None</MenuItem>{options.departments.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={6}><TextField label='Asset Code' fullWidth size='small' value={form.asset_code} onChange={(e) => setForm((p) => ({ ...p, asset_code: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={6}><TextField label='QR Code' fullWidth size='small' value={form.qr_code} onChange={(e) => setForm((p) => ({ ...p, qr_code: e.target.value }))} /></Grid>
-                    <Grid item xs={12}><TextField label='Name' fullWidth size='small' value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={4}><TextField type='date' label='Purchase Date' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.purchase_date} onChange={(e) => setForm((p) => ({ ...p, purchase_date: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={4}><TextField type='number' label='Price' fullWidth size='small' value={form.purchase_price} onChange={(e) => setForm((p) => ({ ...p, purchase_price: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={4}><TextField type='date' label='Warranty End' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.warranty_end_date} onChange={(e) => setForm((p) => ({ ...p, warranty_end_date: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={6}><TextField select label='Condition' fullWidth size='small' value={form.condition_status} onChange={(e) => setForm((p) => ({ ...p, condition_status: e.target.value }))}>{CONDITION_OPTIONS.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={6}><TextField select label='Location' fullWidth size='small' value={form.location_status} onChange={(e) => setForm((p) => ({ ...p, location_status: e.target.value }))}>{LOCATION_OPTIONS.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12}><TextField label='Specifications (JSON object)' fullWidth size='small' multiline minRows={3} value={form.specifications} onChange={(e) => setForm((p) => ({ ...p, specifications: e.target.value }))} /></Grid>
+                <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+                    <Grid item xs={12} md={8}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Thông tin tài sản
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Nhập nhóm phân loại, mã nhận diện và thông tin mua sắm cơ bản.
+                                    </Typography>
+                                </Box>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} md={6}>
+                                        <Autocomplete
+                                            size='small'
+                                            options={options.categories}
+                                            value={selectedAssetCategoryOption}
+                                            onChange={(_, value) => setForm((p) => ({ ...p, category_id: value?.id || '' }))}
+                                            isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
+                                            getOptionLabel={(option) => option?.name || ''}
+                                            renderOption={(props, option) => (
+                                                <Box component='li' {...props}>
+                                                    <Box>
+                                                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                            {option.name}
+                                                        </Typography>
+                                                        <Typography variant='caption' color='text.secondary'>
+                                                            {[option.code, option.parent?.name ? `Cha: ${option.parent.name}` : null].filter(Boolean).join(' • ') || 'Danh mục gốc'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label='Danh mục'
+                                                    placeholder='Tìm theo tên hoặc mã'
+                                                    helperText={selectedAssetCategoryOption?.code ? `Mã: ${selectedAssetCategoryOption.code}` : 'Chọn danh mục tài sản phù hợp.'}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <Autocomplete
+                                            size='small'
+                                            options={options.departments}
+                                            value={selectedDepartmentOption}
+                                            onChange={(_, value) => setForm((p) => ({ ...p, department_id: value?.id || '' }))}
+                                            isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
+                                            getOptionLabel={(option) => option?.name || ''}
+                                            renderOption={(props, option) => (
+                                                <Box component='li' {...props}>
+                                                    <Box>
+                                                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                            {option.name}
+                                                        </Typography>
+                                                        <Typography variant='caption' color='text.secondary'>
+                                                            {[option.code, option.department_title?.name, option.organization?.name].filter(Boolean).join(' • ') || 'Phòng ban nội bộ'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label='Phòng ban'
+                                                    placeholder='Tìm theo tên phòng ban'
+                                                    helperText={selectedDepartmentOption ? `Đã chọn: ${selectedDepartmentOption.name}` : 'Có thể bỏ trống nếu tài sản chưa gán phòng ban.'}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField label='Mã tài sản' fullWidth size='small' placeholder='VD: TS-0001' value={form.asset_code} onChange={(e) => setForm((p) => ({ ...p, asset_code: e.target.value }))} />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField label='Mã QR' fullWidth size='small' placeholder='Để trống sẽ dùng mã tài sản' value={form.qr_code} onChange={(e) => setForm((p) => ({ ...p, qr_code: e.target.value }))} />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <TextField label='Tên tài sản' fullWidth size='small' placeholder='Nhập tên hiển thị của tài sản' value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
+                                    </Grid>
+                                    <Grid item xs={12} md={4}>
+                                        <TextField type='date' label='Ngày mua' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.purchase_date} onChange={(e) => setForm((p) => ({ ...p, purchase_date: e.target.value }))} />
+                                    </Grid>
+                                    <Grid item xs={12} md={4}>
+                                        <TextField type='number' label='Giá mua' fullWidth size='small' value={form.purchase_price} onChange={(e) => setForm((p) => ({ ...p, purchase_price: e.target.value }))} />
+                                    </Grid>
+                                    <Grid item xs={12} md={4}>
+                                        <TextField type='date' label='Hết bảo hành' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.warranty_end_date} onChange={(e) => setForm((p) => ({ ...p, warranty_end_date: e.target.value }))} />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField select label='Tình trạng' fullWidth size='small' value={form.condition_status} onChange={(e) => setForm((p) => ({ ...p, condition_status: e.target.value }))}>
+                                            {CONDITION_OPTIONS.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                                        </TextField>
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField select label='Vị trí sử dụng' fullWidth size='small' value={form.location_status} onChange={(e) => setForm((p) => ({ ...p, location_status: e.target.value }))}>
+                                            {LOCATION_OPTIONS.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Stack>
+                        </Box>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <Stack spacing={2.5} sx={{ height: '100%' }}>
+                            <Box sx={{ ...formSectionSx, minHeight: 220 }}>
+                                <Stack spacing={1.5} alignItems='center' textAlign='center'>
+                                    <Box>
+                                        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                            QR Preview
+                                        </Typography>
+                                        <Typography variant='body2' color='text.secondary'>
+                                            Mã QR được tạo tự động từ mã QR hoặc mã tài sản.
+                                        </Typography>
+                                    </Box>
+
+                                    {qrPreview ? (
+                                        <Box component='img' src={qrPreview} alt='QR Preview' sx={{ width: 168, height: 168, borderRadius: 2, border: '1px solid', borderColor: 'divider', p: 1, bgcolor: 'common.white' }} />
+                                    ) : (
+                                        <Box sx={{ width: 168, height: 168, borderRadius: 2, border: '1px dashed', borderColor: 'divider', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2 }}>
+                                            <Typography variant='body2' color='text.secondary'>
+                                                Nhập mã tài sản hoặc mã QR để xem trước.
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Stack>
+                            </Box>
+
+                            <Box sx={formSectionSx}>
+                                <Stack spacing={1.5}>
+                                    <Box>
+                                        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                            Hình ảnh
+                                        </Typography>
+                                        <Typography variant='body2' color='text.secondary'>
+                                            Tải ảnh đại diện và ảnh gallery cho tài sản.
+                                        </Typography>
+                                    </Box>
+
+                                    <Button variant='outlined' component='label' sx={actionButtonSx}>
+                                        Ảnh đại diện
+                                        <input hidden type='file' accept='image/*' onChange={(e) => setForm((p) => ({ ...p, image: e.target.files?.[0] || null }))} />
+                                    </Button>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        {form.image ? form.image.name : 'Chưa chọn ảnh đại diện'}
+                                    </Typography>
+
+                                    <Button variant='outlined' component='label' sx={actionButtonSx}>
+                                        Ảnh thư viện
+                                        <input hidden multiple type='file' accept='image/*' onChange={(e) => setForm((p) => ({ ...p, images: Array.from(e.target.files || []) }))} />
+                                    </Button>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        {(form.images || []).length > 0 ? `${form.images.length} ảnh đã chọn` : 'Chưa chọn ảnh thư viện'}
+                                    </Typography>
+                                    {(form.images || []).length > 0 ? (
+                                        <Box sx={{ px: 1.25, py: 1, borderRadius: 2, bgcolor: 'background.default', border: '1px dashed', borderColor: 'divider' }}>
+                                            <Typography variant='caption' color='text.secondary'>
+                                                {(form.images || []).map((item) => item.name).join(', ')}
+                                            </Typography>
+                                        </Box>
+                                    ) : null}
+                                </Stack>
+                            </Box>
+                        </Stack>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={1.5}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Thông số kỹ thuật
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Lưu các thuộc tính kỹ thuật dùng chung của tài sản dưới dạng JSON object.
+                                    </Typography>
+                                </Box>
+
+                                <TextField label='Specifications (JSON object)' fullWidth size='small' multiline minRows={4} value={form.specifications} onChange={(e) => setForm((p) => ({ ...p, specifications: e.target.value }))} />
+                            </Stack>
+                        </Box>
+                    </Grid>
+
                     {categoryCustomFields.length > 0 && (
                         <Grid item xs={12}>
-                            <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                                <Typography variant='subtitle2' sx={{ mb: 1.5 }}>Category-specific fields</Typography>
-                                <Grid container spacing={2}>
+                            <Box sx={formSectionSx}>
+                                <Stack spacing={1.5}>
+                                    <Box>
+                                        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                            Trường theo danh mục
+                                        </Typography>
+                                        <Typography variant='body2' color='text.secondary'>
+                                            Các field này thay đổi theo danh mục đã chọn.
+                                        </Typography>
+                                    </Box>
+
+                                    <Grid container spacing={2}>
                                     {categoryCustomFields.map((field) => {
                                         const fieldKey = field.key;
                                         const label = field.label || field.key;
@@ -1243,32 +1641,26 @@ export default function AssetManagement() {
                                             </Grid>
                                         );
                                     })}
-                                </Grid>
+                                    </Grid>
+                                </Stack>
                             </Box>
                         </Grid>
                     )}
-                    <Grid item xs={12}><TextField label='Custom Field Values (JSON object)' fullWidth size='small' multiline minRows={3} value={form.custom_field_values} onChange={(e) => setForm((p) => ({ ...p, custom_field_values: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={4}>
-                        <Box sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 2, minHeight: 190 }}>
-                            <Typography variant='subtitle2' sx={{ mb: 1 }}>QR Preview</Typography>
-                            {qrPreview ? (
-                                <Box component='img' src={qrPreview} alt='QR Preview' sx={{ width: 160, height: 160 }} />
-                            ) : (
-                                <Typography variant='body2' color='text.secondary'>Enter asset code or QR code to preview.</Typography>
-                            )}
-                        </Box>
-                    </Grid>
                     <Grid item xs={12}>
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-                            <Box>
-                                <Button variant='outlined' component='label'>Primary Image<input hidden type='file' accept='image/*' onChange={(e) => setForm((p) => ({ ...p, image: e.target.files?.[0] || null }))} /></Button>
-                                {form.image ? <Typography variant='body2' sx={{ mt: 1 }}>{form.image.name}</Typography> : null}
-                            </Box>
-                            <Box>
-                                <Button variant='outlined' component='label'>Gallery Images<input hidden multiple type='file' accept='image/*' onChange={(e) => setForm((p) => ({ ...p, images: Array.from(e.target.files || []) }))} /></Button>
-                                {(form.images || []).length > 0 ? <Typography variant='body2' sx={{ mt: 1 }}>{(form.images || []).map((item) => item.name).join(', ')}</Typography> : null}
-                            </Box>
-                        </Stack>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={1.5}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Giá trị tuỳ biến
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Có thể chỉnh trực tiếp JSON để bổ sung hoặc override dữ liệu field động.
+                                    </Typography>
+                                </Box>
+
+                                <TextField label='Custom Field Values (JSON object)' fullWidth size='small' multiline minRows={4} value={form.custom_field_values} onChange={(e) => setForm((p) => ({ ...p, custom_field_values: e.target.value }))} />
+                            </Stack>
+                        </Box>
                     </Grid>
                 </Grid>
             );
@@ -1276,114 +1668,475 @@ export default function AssetManagement() {
 
         if (tab === 'assignments') {
             return (
-                <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                    <Grid item xs={12}><TextField select label='Asset' fullWidth size='small' value={form.asset_id} onChange={(e) => setForm((p) => ({ ...p, asset_id: e.target.value }))}>{options.assets.map((item) => <MenuItem key={item.id} value={item.id}>{item.asset_code} - {item.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={6}><TextField select label='User' fullWidth size='small' value={form.user_id} onChange={(e) => setForm((p) => ({ ...p, user_id: e.target.value }))}><MenuItem value=''>None</MenuItem>{options.users.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={6}><TextField select label='Department' fullWidth size='small' value={form.department_id} onChange={(e) => setForm((p) => ({ ...p, department_id: e.target.value }))}><MenuItem value=''>None</MenuItem>{options.departments.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={6}><TextField type='datetime-local' label='Assigned At' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.assigned_at} onChange={(e) => setForm((p) => ({ ...p, assigned_at: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={6}><TextField type='datetime-local' label='Due Back At' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.due_back_at} onChange={(e) => setForm((p) => ({ ...p, due_back_at: e.target.value }))} /></Grid>
+                <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+                    <Grid item xs={12} md={7}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Thông tin bàn giao
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Chọn tài sản cần bàn giao và xác định người hoặc phòng ban đang nhận.
+                                    </Typography>
+                                </Box>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                        <Autocomplete
+                                            size='small'
+                                            options={options.assets}
+                                            value={selectedAssignmentAssetOption}
+                                            onChange={(_, value) => setForm((p) => ({ ...p, asset_id: value?.id || '' }))}
+                                            isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
+                                            getOptionLabel={(option) => option ? `${option.asset_code} - ${option.name}` : ''}
+                                            renderOption={(props, option) => (
+                                                <Box component='li' {...props}>
+                                                    <Box>
+                                                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                            {option.asset_code} - {option.name}
+                                                        </Typography>
+                                                        <Typography variant='caption' color='text.secondary'>
+                                                            {[option.category?.name, option.department?.name, option.location_status].filter(Boolean).join(' • ') || 'Tài sản chưa phân loại'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label='Tài sản'
+                                                    placeholder='Tìm theo mã hoặc tên tài sản'
+                                                    helperText={selectedAssignmentAssetOption ? `Đang chọn: ${selectedAssignmentAssetOption.asset_code}` : 'Chọn tài sản cần bàn giao.'}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6}>
+                                        <Autocomplete
+                                            size='small'
+                                            options={options.users}
+                                            value={selectedAssignmentUserOption}
+                                            onChange={(_, value) => setForm((p) => ({ ...p, user_id: value?.id || '' }))}
+                                            isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
+                                            getOptionLabel={(option) => option?.name || ''}
+                                            renderOption={(props, option) => (
+                                                <Box component='li' {...props}>
+                                                    <Box>
+                                                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                            {option.name}
+                                                        </Typography>
+                                                        <Typography variant='caption' color='text.secondary'>
+                                                            {[option.email, option.detail?.employee_code].filter(Boolean).join(' • ') || 'Nhân sự nội bộ'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label='Người nhận'
+                                                    placeholder='Tìm theo tên nhân sự'
+                                                    helperText={selectedAssignmentUserOption ? `Đã chọn: ${selectedAssignmentUserOption.name}` : 'Có thể bỏ trống nếu chỉ bàn giao cho phòng ban.'}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6}>
+                                        <Autocomplete
+                                            size='small'
+                                            options={options.departments}
+                                            value={selectedAssignmentDepartmentOption}
+                                            onChange={(_, value) => setForm((p) => ({ ...p, department_id: value?.id || '' }))}
+                                            isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
+                                            getOptionLabel={(option) => option?.name || ''}
+                                            renderOption={(props, option) => (
+                                                <Box component='li' {...props}>
+                                                    <Box>
+                                                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                            {option.name}
+                                                        </Typography>
+                                                        <Typography variant='caption' color='text.secondary'>
+                                                            {[option.code, option.organization?.name].filter(Boolean).join(' • ') || 'Phòng ban nội bộ'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label='Phòng ban nhận'
+                                                    placeholder='Tìm phòng ban'
+                                                    helperText={selectedAssignmentDepartmentOption ? `Đã chọn: ${selectedAssignmentDepartmentOption.name}` : 'Có thể bỏ trống nếu bàn giao trực tiếp cho nhân sự.'}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Stack>
+                        </Box>
+                    </Grid>
+
+                    <Grid item xs={12} md={5}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Thời gian
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Ghi nhận thời điểm bàn giao và mốc dự kiến hoàn trả nếu có.
+                                    </Typography>
+                                </Box>
+
+                                <TextField
+                                    type='datetime-local'
+                                    label='Thời gian bàn giao'
+                                    fullWidth
+                                    size='small'
+                                    InputLabelProps={{ shrink: true }}
+                                    value={form.assigned_at}
+                                    onChange={(e) => setForm((p) => ({ ...p, assigned_at: e.target.value }))}
+                                />
+
+                                <TextField
+                                    type='datetime-local'
+                                    label='Dự kiến hoàn trả'
+                                    fullWidth
+                                    size='small'
+                                    InputLabelProps={{ shrink: true }}
+                                    value={form.due_back_at}
+                                    onChange={(e) => setForm((p) => ({ ...p, due_back_at: e.target.value }))}
+                                    helperText='Để trống nếu chưa có thời hạn hoàn trả.'
+                                />
+
+                                <Box
+                                    sx={{
+                                        px: 1.5,
+                                        py: 1.25,
+                                        borderRadius: 2,
+                                        border: '1px dashed',
+                                        borderColor: 'divider',
+                                        bgcolor: 'background.default',
+                                    }}
+                                >
+                                    <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                        Tóm tắt
+                                    </Typography>
+                                    <Typography variant='caption' color='text.secondary'>
+                                        {selectedAssignmentAssetOption ? `${selectedAssignmentAssetOption.asset_code} đang được chuẩn bị bàn giao.` : 'Chưa chọn tài sản.'}
+                                    </Typography>
+                                    <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                                        {selectedAssignmentUserOption || selectedAssignmentDepartmentOption
+                                            ? `Bên nhận: ${selectedAssignmentUserOption?.name || 'Chưa chọn người'}${selectedAssignmentDepartmentOption ? ` • ${selectedAssignmentDepartmentOption.name}` : ''}`
+                                            : 'Chưa chọn bên nhận.'}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Box>
+                    </Grid>
                 </Grid>
             );
         }
 
         if (tab === 'maintenances') {
             return (
-                <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                    <Grid item xs={12}><TextField select label='Asset' fullWidth size='small' value={form.asset_id} onChange={(e) => setForm((p) => ({ ...p, asset_id: e.target.value }))}>{options.assets.map((item) => <MenuItem key={item.id} value={item.id}>{item.asset_code} - {item.name}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12}><TextField label='Title' fullWidth size='small' value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></Grid>
-                    <Grid item xs={12} md={4}><TextField select label='Type' fullWidth size='small' value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>{['maintenance', 'repair', 'warranty'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={4}><TextField select label='Status' fullWidth size='small' value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}>{['scheduled', 'in_progress', 'completed', 'cancelled'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField></Grid>
-                    <Grid item xs={12} md={4}><TextField type='number' label='Cost' fullWidth size='small' value={form.cost} onChange={(e) => setForm((p) => ({ ...p, cost: e.target.value }))} /></Grid>
-                    <Grid item xs={12}><TextField type='datetime-local' label='Scheduled At' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.scheduled_at} onChange={(e) => setForm((p) => ({ ...p, scheduled_at: e.target.value }))} /></Grid>
+                <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+                    <Grid item xs={12} md={7}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Thông tin bảo trì
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Chọn tài sản, khai báo loại công việc và nội dung cần thực hiện.
+                                    </Typography>
+                                </Box>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                        <Autocomplete
+                                            size='small'
+                                            options={options.assets}
+                                            value={selectedMaintenanceAssetOption}
+                                            onChange={(_, value) => setForm((p) => ({ ...p, asset_id: value?.id || '' }))}
+                                            isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
+                                            getOptionLabel={(option) => option ? `${option.asset_code} - ${option.name}` : ''}
+                                            renderOption={(props, option) => (
+                                                <Box component='li' {...props}>
+                                                    <Box>
+                                                        <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                            {option.asset_code} - {option.name}
+                                                        </Typography>
+                                                        <Typography variant='caption' color='text.secondary'>
+                                                            {[option.category?.name, option.condition_status, option.location_status].filter(Boolean).join(' • ') || 'Tài sản nội bộ'}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label='Tài sản'
+                                                    placeholder='Tìm theo mã hoặc tên tài sản'
+                                                    helperText={selectedMaintenanceAssetOption ? `Đang chọn: ${selectedMaintenanceAssetOption.asset_code}` : 'Chọn tài sản cần bảo trì.'}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            label='Tiêu đề công việc'
+                                            fullWidth
+                                            size='small'
+                                            placeholder='Ví dụ: Vệ sinh định kỳ, thay pin, sửa bàn phím...'
+                                            value={form.title}
+                                            onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                                        />
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6}>
+                                        <TextField select label='Loại công việc' fullWidth size='small' value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}>
+                                            {['maintenance', 'repair', 'warranty'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                                        </TextField>
+                                    </Grid>
+
+                                    <Grid item xs={12} md={6}>
+                                        <TextField select label='Trạng thái' fullWidth size='small' value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}>
+                                            {['scheduled', 'in_progress', 'completed', 'cancelled'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                                        </TextField>
+                                    </Grid>
+                                </Grid>
+                            </Stack>
+                        </Box>
+                    </Grid>
+
+                    <Grid item xs={12} md={5}>
+                        <Box sx={formSectionSx}>
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Kế hoạch thực hiện
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Ghi nhận thời gian dự kiến và chi phí liên quan nếu đã xác định.
+                                    </Typography>
+                                </Box>
+
+                                <TextField
+                                    type='datetime-local'
+                                    label='Thời gian dự kiến'
+                                    fullWidth
+                                    size='small'
+                                    InputLabelProps={{ shrink: true }}
+                                    value={form.scheduled_at}
+                                    onChange={(e) => setForm((p) => ({ ...p, scheduled_at: e.target.value }))}
+                                />
+
+                                <TextField
+                                    type='number'
+                                    label='Chi phí'
+                                    fullWidth
+                                    size='small'
+                                    value={form.cost}
+                                    onChange={(e) => setForm((p) => ({ ...p, cost: e.target.value }))}
+                                    helperText='Để trống nếu chưa có chi phí cụ thể.'
+                                />
+
+                                <Box
+                                    sx={{
+                                        px: 1.5,
+                                        py: 1.25,
+                                        borderRadius: 2,
+                                        border: '1px dashed',
+                                        borderColor: 'divider',
+                                        bgcolor: 'background.default',
+                                    }}
+                                >
+                                    <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                        Tóm tắt
+                                    </Typography>
+                                    <Typography variant='caption' color='text.secondary'>
+                                        {selectedMaintenanceAssetOption ? `${selectedMaintenanceAssetOption.asset_code} sẽ được xử lý theo loại ${form.type || 'maintenance'}.` : 'Chưa chọn tài sản bảo trì.'}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Box>
+                    </Grid>
                 </Grid>
             );
         }
 
         return (
-            <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                <Grid item xs={12} md={6}><TextField select label='Department' fullWidth size='small' value={form.department_id} onChange={(e) => handleAuditDepartmentChange(e.target.value)}><MenuItem value=''>All</MenuItem>{options.departments.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</TextField></Grid>
-                <Grid item xs={12} md={6}><TextField type='datetime-local' label='Audited At' fullWidth size='small' InputLabelProps={{ shrink: true }} value={form.audited_at} onChange={(e) => setForm((p) => ({ ...p, audited_at: e.target.value }))} /></Grid>
-                <Grid item xs={12}><TextField select label='Status' fullWidth size='small' value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}>{['planned', 'in_progress', 'completed'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}</TextField></Grid>
-                <Grid item xs={12}><TextField label='Notes' fullWidth size='small' multiline minRows={2} value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} /></Grid>
-                <Grid item xs={12}>
-                    <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent='space-between' sx={{ mb: 2 }}>
-                            <Typography variant='subtitle2'>Audit checklist</Typography>
-                            <Typography variant='body2' color='text.secondary'>
-                                {`${(form.items || []).filter((item) => item.included).length} selected / ${auditScopedAssets.length} assets`}
-                            </Typography>
-                        </Stack>
-                        <Stack spacing={1.5}>
-                            {(form.items || []).map((item) => {
-                                const asset = auditScopedAssets.find((entry) => Number(entry.id) === Number(item.asset_id));
-                                if (!asset) {
-                                    return null;
-                                }
+            <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+                <Grid item xs={12} md={5}>
+                    <Box sx={formSectionSx}>
+                        <Stack spacing={2}>
+                            <Box>
+                                <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                    Phạm vi kiểm kê
+                                </Typography>
+                                <Typography variant='body2' color='text.secondary'>
+                                    Chọn phòng ban, thời điểm kiểm kê và trạng thái đợt kiểm kê.
+                                </Typography>
+                            </Box>
 
-                                return (
-                                    <Box key={item.asset_id} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                                        <Grid container spacing={1.5} alignItems='center'>
-                                            <Grid item xs={12} md={3}>
-                                                <FormControlLabel
-                                                    control={<Checkbox checked={!!item.included} onChange={(e) => handleAuditItemChange(item.asset_id, 'included', e.target.checked)} />}
-                                                    label={
-                                                        <Box>
-                                                            <Typography variant='body2' sx={{ fontWeight: 600 }}>{asset.asset_code}</Typography>
-                                                            <Typography variant='caption' color='text.secondary'>{asset.name}</Typography>
-                                                        </Box>
-                                                    }
-                                                />
-                                            </Grid>
-                                            <Grid item xs={12} md={3}>
-                                                <TextField
-                                                    select
-                                                    fullWidth
-                                                    size='small'
-                                                    label='Expected'
-                                                    value={item.expected_location_status}
-                                                    onChange={(e) => handleAuditItemChange(item.asset_id, 'expected_location_status', e.target.value)}
-                                                >
-                                                    {LOCATION_OPTIONS.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
-                                                </TextField>
-                                            </Grid>
-                                            <Grid item xs={12} md={3}>
-                                                <TextField
-                                                    select
-                                                    fullWidth
-                                                    size='small'
-                                                    label='Actual'
-                                                    value={item.actual_location_status}
-                                                    onChange={(e) => handleAuditItemChange(item.asset_id, 'actual_location_status', e.target.value)}
-                                                >
-                                                    {LOCATION_OPTIONS.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
-                                                </TextField>
-                                            </Grid>
-                                            <Grid item xs={12} md={3}>
-                                                <TextField
-                                                    select
-                                                    fullWidth
-                                                    size='small'
-                                                    label='Result'
-                                                    value={item.result_status}
-                                                    onChange={(e) => handleAuditItemChange(item.asset_id, 'result_status', e.target.value)}
-                                                >
-                                                    {AUDIT_RESULT_OPTIONS.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
-                                                </TextField>
-                                            </Grid>
-                                            <Grid item xs={12}>
-                                                <TextField
-                                                    fullWidth
-                                                    size='small'
-                                                    label='Notes'
-                                                    value={item.notes || ''}
-                                                    onChange={(e) => handleAuditItemChange(item.asset_id, 'notes', e.target.value)}
-                                                />
-                                            </Grid>
-                                        </Grid>
+                            <Autocomplete
+                                size='small'
+                                options={options.departments}
+                                value={selectedAuditDepartmentOption}
+                                onChange={(_, value) => handleAuditDepartmentChange(value?.id || '')}
+                                isOptionEqualToValue={(option, value) => Number(option.id) === Number(value.id)}
+                                getOptionLabel={(option) => option?.name || ''}
+                                renderOption={(props, option) => (
+                                    <Box component='li' {...props}>
+                                        <Box>
+                                            <Typography variant='body2' sx={{ fontWeight: 600 }}>
+                                                {option.name}
+                                            </Typography>
+                                            <Typography variant='caption' color='text.secondary'>
+                                                {[option.code, option.organization?.name].filter(Boolean).join(' • ') || 'Phòng ban nội bộ'}
+                                            </Typography>
+                                        </Box>
                                     </Box>
-                                );
-                            })}
-                            {auditScopedAssets.length === 0 && <Typography variant='body2' color='text.secondary'>No assets available for the selected department.</Typography>}
+                                )}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label='Phòng ban'
+                                        placeholder='Chọn phòng ban cần kiểm kê'
+                                        helperText={selectedAuditDepartmentOption ? `Đang kiểm kê: ${selectedAuditDepartmentOption.name}` : 'Để trống để kiểm kê toàn bộ tài sản trong scope hiện tại.'}
+                                    />
+                                )}
+                            />
+
+                            <TextField
+                                type='datetime-local'
+                                label='Thời điểm kiểm kê'
+                                fullWidth
+                                size='small'
+                                InputLabelProps={{ shrink: true }}
+                                value={form.audited_at}
+                                onChange={(e) => setForm((p) => ({ ...p, audited_at: e.target.value }))}
+                            />
+
+                            <TextField
+                                select
+                                label='Trạng thái'
+                                fullWidth
+                                size='small'
+                                value={form.status}
+                                onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+                            >
+                                {['planned', 'in_progress', 'completed'].map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                            </TextField>
+
+                            <TextField
+                                label='Ghi chú'
+                                fullWidth
+                                size='small'
+                                multiline
+                                minRows={3}
+                                value={form.notes}
+                                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                            />
+                        </Stack>
+                    </Box>
+                </Grid>
+
+                <Grid item xs={12} md={7}>
+                    <Box sx={formSectionSx}>
+                        <Stack spacing={1.5}>
+                            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent='space-between'>
+                                <Box>
+                                    <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                                        Checklist kiểm kê
+                                    </Typography>
+                                    <Typography variant='body2' color='text.secondary'>
+                                        Chọn tài sản tham gia đợt kiểm kê và ghi nhận vị trí thực tế.
+                                    </Typography>
+                                </Box>
+                                <Typography variant='body2' color='text.secondary'>
+                                    {`${(form.items || []).filter((item) => item.included).length} đã chọn / ${auditScopedAssets.length} tài sản`}
+                                </Typography>
+                            </Stack>
+
+                            <Stack spacing={1.5}>
+                                {(form.items || []).map((item) => {
+                                    const asset = auditScopedAssets.find((entry) => Number(entry.id) === Number(item.asset_id));
+                                    if (!asset) {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <Box key={item.asset_id} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                                            <Grid container spacing={1.5} alignItems='center'>
+                                                <Grid item xs={12} md={3}>
+                                                    <FormControlLabel
+                                                        control={<Checkbox checked={!!item.included} onChange={(e) => handleAuditItemChange(item.asset_id, 'included', e.target.checked)} />}
+                                                        label={
+                                                            <Box>
+                                                                <Typography variant='body2' sx={{ fontWeight: 600 }}>{asset.asset_code}</Typography>
+                                                                <Typography variant='caption' color='text.secondary'>{asset.name}</Typography>
+                                                            </Box>
+                                                        }
+                                                    />
+                                                </Grid>
+                                                <Grid item xs={12} md={3}>
+                                                    <TextField
+                                                        select
+                                                        fullWidth
+                                                        size='small'
+                                                        label='Vị trí kỳ vọng'
+                                                        value={item.expected_location_status}
+                                                        onChange={(e) => handleAuditItemChange(item.asset_id, 'expected_location_status', e.target.value)}
+                                                    >
+                                                        {LOCATION_OPTIONS.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
+                                                    </TextField>
+                                                </Grid>
+                                                <Grid item xs={12} md={3}>
+                                                    <TextField
+                                                        select
+                                                        fullWidth
+                                                        size='small'
+                                                        label='Vị trí thực tế'
+                                                        value={item.actual_location_status}
+                                                        onChange={(e) => handleAuditItemChange(item.asset_id, 'actual_location_status', e.target.value)}
+                                                    >
+                                                        {LOCATION_OPTIONS.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
+                                                    </TextField>
+                                                </Grid>
+                                                <Grid item xs={12} md={3}>
+                                                    <TextField
+                                                        select
+                                                        fullWidth
+                                                        size='small'
+                                                        label='Kết quả'
+                                                        value={item.result_status}
+                                                        onChange={(e) => handleAuditItemChange(item.asset_id, 'result_status', e.target.value)}
+                                                    >
+                                                        {AUDIT_RESULT_OPTIONS.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
+                                                    </TextField>
+                                                </Grid>
+                                                <Grid item xs={12}>
+                                                    <TextField
+                                                        fullWidth
+                                                        size='small'
+                                                        label='Ghi chú tài sản'
+                                                        value={item.notes || ''}
+                                                        onChange={(e) => handleAuditItemChange(item.asset_id, 'notes', e.target.value)}
+                                                    />
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+                                    );
+                                })}
+                                {auditScopedAssets.length === 0 && <Typography variant='body2' color='text.secondary'>No assets available for the selected department.</Typography>}
+                            </Stack>
                         </Stack>
                     </Box>
                 </Grid>
@@ -1406,17 +2159,41 @@ export default function AssetManagement() {
 
                 {tab !== 'reports' && (
                     <Stack spacing={1.5}>
-                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent='space-between'>
-                            <TextField size='small' label='Search' value={keyword} onChange={(e) => setKeyword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} sx={{ minWidth: { xs: '100%', md: 280 } }} />
-                            <Stack direction='row' spacing={1}>
-                                <Button variant='outlined' onClick={() => { showLoading(); loadTab(tab).finally(hideLoading); }}>Reload</Button>
-                                {tab === 'assets' && <Button variant='outlined' disabled={selectedRows.length === 0} onClick={() => handlePrintQr((rows.assets || []).filter((item) => selectedRows.includes(item.id)))}>Print QR</Button>}
-                                {tab === 'assets' && <Button variant='outlined' onClick={handleExportAssetsExcel}>Export XLSX</Button>}
-                                {tab === 'assets' && <Button variant='outlined' onClick={handleExportAssetsCsv}>Export CSV</Button>}
-                                <Button variant='outlined' color='error' disabled={selectedRows.length === 0} onClick={handleDelete}>Delete</Button>
-                                <Button variant='contained' onClick={openCreate}>Add</Button>
+                        <Toolbar
+                            loadData={() => {
+                                showLoading();
+                                loadTab(tab)
+                                    .catch((err) => showNotification(err.response?.data?.message || 'Failed to load data', 'error'))
+                                    .finally(hideLoading);
+                            }}
+                            handleSearch={handleSearch}
+                            handleAdd={openCreate}
+                            handleDelete={handleDelete}
+                            deleteDisabled={selectedRows.length === 0}
+                            showDownload={false}
+                            showOption={false}
+                            searchValue={keyword}
+                            onSearchValueChange={setKeyword}
+                        />
+
+                        {tab === 'assets' && (
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap='wrap'>
+                                <Button
+                                    variant='outlined'
+                                    disabled={selectedRows.length === 0}
+                                    onClick={() => handlePrintQr((rows.assets || []).filter((item) => selectedRows.includes(item.id)))}
+                                    sx={actionButtonSx}
+                                >
+                                    Print QR
+                                </Button>
+                                <Button variant='outlined' onClick={handleExportAssetsExcel} sx={actionButtonSx}>
+                                    Export XLSX
+                                </Button>
+                                <Button variant='outlined' onClick={handleExportAssetsCsv} sx={actionButtonSx}>
+                                    Export CSV
+                                </Button>
                             </Stack>
-                        </Stack>
+                        )}
 
                         {tab === 'assets' && (
                             <Stack spacing={1.5}>
@@ -1570,11 +2347,11 @@ export default function AssetManagement() {
                 )}
 
                 {tab === 'reports' && (
-                    <Stack direction='row' spacing={1} justifyContent='flex-end'>
-                        <Button variant='outlined' onClick={() => { showLoading(); loadTab('reports').finally(hideLoading); }}>Reload</Button>
-                        <Button variant='outlined' onClick={handleExportReportExcel}>Export XLSX</Button>
-                        <Button variant='outlined' onClick={handleExportReportCsv}>Export CSV</Button>
-                        <Button variant='contained' onClick={handlePrintReport}>Print Report</Button>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent='flex-end' useFlexGap flexWrap='wrap'>
+                        <Button variant='outlined' onClick={() => { showLoading(); loadTab('reports').finally(hideLoading); }} sx={actionButtonSx}>Reload</Button>
+                        <Button variant='outlined' onClick={handleExportReportExcel} sx={actionButtonSx}>Export XLSX</Button>
+                        <Button variant='outlined' onClick={handleExportReportCsv} sx={actionButtonSx}>Export CSV</Button>
+                        <Button variant='contained' onClick={handlePrintReport} sx={actionButtonSx}>Print Report</Button>
                     </Stack>
                 )}
 
@@ -1591,6 +2368,7 @@ export default function AssetManagement() {
                         onRowDoubleClick={(params) => openEdit(params.row)}
                         initialState={{ pagination: { paginationModel: { pageSize: 10, page: 0 } } }}
                         pageSizeOptions={[10, 25, 50]}
+                        rowHeight={tab === 'assets' ? 60 : undefined}
                         onRowSelectionModelChange={(newSelection) => {
                             const ids = Array.isArray(newSelection) ? newSelection : Array.from(newSelection?.ids || []);
                             setSelectedRows(ids);
@@ -1689,7 +2467,7 @@ export default function AssetManagement() {
                                 <Grid item xs={12} md={4}>
                                     <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                                         <Typography variant='subtitle2' sx={{ mb: 1 }}>QR Code</Typography>
-                                        {detailAsset.qr_image ? <Box component='img' src={detailAsset.qr_image} alt='QR' sx={{ width: 220, height: 220, maxWidth: '100%' }} /> : <Typography variant='body2' color='text.secondary'>No QR</Typography>}
+                                        {getQrValue(detailAsset) ? <QrThumb value={getQrValue(detailAsset)} size={220} /> : <Typography variant='body2' color='text.secondary'>No QR</Typography>}
                                         <Stack direction='row' spacing={1} sx={{ mt: 2 }}>
                                             <Button size='small' variant='outlined' onClick={() => handleDownloadQr(detailAsset)}>Download QR</Button>
                                             <Button size='small' variant='outlined' onClick={() => handlePrintQr([detailAsset])}>Print QR</Button>
@@ -1799,4 +2577,3 @@ export default function AssetManagement() {
         </MainCard>
     );
 }
-

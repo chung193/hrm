@@ -37,6 +37,11 @@ export const update = async (id, data) => {
     return response
 }
 
+export const resetPassword = async (id, data) => {
+    const response = await authInstance.patch(`user/${id}/password`, data);
+    return response;
+}
+
 export const assignRoles = async (id, roleIds = []) => {
     const response = await authInstance.post(`user/${id}/role`, { role_ids: roleIds })
     return response

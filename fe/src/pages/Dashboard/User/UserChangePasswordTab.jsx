@@ -10,7 +10,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useGlobalContext } from '@providers/GlobalProvider';
-import { resetPasswordSystem } from './UserServices';
+import { resetPassword, resetPasswordSystem } from './UserServices';
 
 export default function UserChangePasswordTab({ id, scopeMode = 'organization' }) {
     const [showPassword, setShowPassword] = useState(false);
@@ -26,15 +26,11 @@ export default function UserChangePasswordTab({ id, scopeMode = 'organization' }
     });
 
     const onSubmit = async (data) => {
-        if (!isSystemScope) {
-            showNotification('Password reset is only available in administrator scope', 'error');
-            return;
-        }
-
         showLoading();
 
         try {
-            await resetPasswordSystem(id, data);
+            const action = isSystemScope ? resetPasswordSystem : resetPassword;
+            await action(id, data);
             showNotification('Updated password successfully', 'success');
             reset();
         } catch (err) {
@@ -51,11 +47,11 @@ export default function UserChangePasswordTab({ id, scopeMode = 'organization' }
             component="form"
             onSubmit={handleSubmit(onSubmit)}
         >
-            {!isSystemScope && (
-                <Alert severity="info">
-                    Password reset is managed from administrator user management.
-                </Alert>
-            )}
+            <Alert severity="info">
+                {isSystemScope
+                    ? 'System administrator scope can update passwords for administrator users.'
+                    : 'Organization scope can update passwords for users within the current organization.'}
+            </Alert>
 
             <Controller
                 name="password"
@@ -103,7 +99,7 @@ export default function UserChangePasswordTab({ id, scopeMode = 'organization' }
                 )}
             />
 
-            <Button type="submit" variant="contained" size="small" sx={{ width: 200 }} disabled={!isSystemScope}>
+            <Button type="submit" variant="contained" size="small" sx={{ width: 200 }}>
                 Update Password
             </Button>
         </Stack>

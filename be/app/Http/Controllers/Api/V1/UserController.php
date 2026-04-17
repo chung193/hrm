@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Requests\Api\V1\UserStoreRequest;
 use App\Http\Requests\Api\V1\UserDetailUpdateRequest;
+use App\Http\Requests\Api\V1\AdminResetUserPasswordRequest;
 use App\Http\Resources\Api\User\UserResource;
 use App\Http\Resources\Api\User\UserWithRoleResource;
 use App\Http\Resources\Api\User\UserWithDetailRoleResource;
@@ -69,6 +70,16 @@ class UserController extends BaseApiController
     {
         $user = $this->userService->updateUser($id, $request->validated());
         return $this->successResponse(new UserResource($user));
+    }
+
+    public function resetPassword(AdminResetUserPasswordRequest $request, int $id): JsonResponse
+    {
+        $user = $this->userService->resetUserPassword($id, $request->validated('password'));
+
+        return $this->successResponse([
+            'message' => 'Password updated successfully',
+            'user' => new UserResource($user),
+        ]);
     }
 
     /**

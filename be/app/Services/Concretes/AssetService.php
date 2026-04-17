@@ -72,10 +72,10 @@ class AssetService extends BaseService implements AssetServiceInterface
         }
 
         $data['qr_code'] = $data['qr_code'] ?? $data['asset_code'];
-        $data['qr_image'] = $data['qr_image'] ?? null;
         /** @var UploadedFile|null $image */
         $image = $data['image'] ?? null;
         $images = $this->normalizeImages($data['images'] ?? []);
+        unset($data['qr_image']);
         unset($data['image']);
         unset($data['images']);
 
@@ -94,10 +94,10 @@ class AssetService extends BaseService implements AssetServiceInterface
         }
 
         $data['qr_code'] = $data['qr_code'] ?? $data['asset_code'];
-        $data['qr_image'] = $data['qr_image'] ?? $asset->qr_image;
         /** @var UploadedFile|null $image */
         $image = $data['image'] ?? null;
         $images = $this->normalizeImages($data['images'] ?? []);
+        unset($data['qr_image']);
         unset($data['image']);
         unset($data['images']);
 

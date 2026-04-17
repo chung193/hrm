@@ -21,6 +21,9 @@ class AssetAssignmentResource extends JsonResource
             'assigned_at' => $this->assigned_at,
             'due_back_at' => $this->due_back_at,
             'returned_at' => $this->returned_at,
+            'recall_requested_at' => $this->recall_requested_at,
+            'recall_requested_by_user_id' => $this->recall_requested_by_user_id,
+            'recall_note' => $this->recall_note,
             'return_reason' => $this->return_reason,
             'handover_notes' => $this->handover_notes,
             'metadata' => $this->metadata ?? [],
@@ -30,6 +33,7 @@ class AssetAssignmentResource extends JsonResource
             'user' => $this->whenLoaded('user'),
             'department' => $this->whenLoaded('department'),
             'assigned_by' => $this->whenLoaded('assignedBy'),
+            'recall_requested_by' => $this->whenLoaded('recallRequestedBy'),
         ];
     }
 }

@@ -23,6 +23,8 @@ interface UserServiceInterface extends BaseServiceInterface
 
     public function updateUser(int $id, array $data): Model;
 
+    public function resetUserPassword(int $id, string $password): Model;
+
     public function deleteUser(int $id): bool;
 
     public function deleteUsers(array $ids): int;

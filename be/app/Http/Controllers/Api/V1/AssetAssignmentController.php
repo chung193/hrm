@@ -50,6 +50,15 @@ class AssetAssignmentController extends BaseApiController
         return $this->successResponse(new AssetAssignmentResource($this->assetAssignmentService->returnAssetAssignment($asset_assignment, $request->validated())));
     }
 
+    public function requestRecall(Request $request, int $asset_assignment): JsonResponse
+    {
+        $validated = $request->validate([
+            'recall_note' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        return $this->successResponse(new AssetAssignmentResource($this->assetAssignmentService->requestRecall($asset_assignment, $validated)));
+    }
+
     public function destroy(int $asset_assignment): JsonResponse
     {
         $this->assetAssignmentService->deleteAssetAssignment($asset_assignment);

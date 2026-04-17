@@ -24,8 +24,8 @@ export default function Login() {
     } = useForm({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            username: 'chungvd.it@gmail.com',
-            password: '12345678',
+            username: '',
+            password: '',
             remember: false,
         },
     });
@@ -54,7 +54,6 @@ export default function Login() {
     const formContent = (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={2.5}>
-                {/* Email Field */}
                 <Box>
                     <TextField
                         fullWidth

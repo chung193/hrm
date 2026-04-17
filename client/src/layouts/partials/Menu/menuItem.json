@@ -1,0 +1,192 @@
+[
+    {
+        "id": "menu",
+        "label": "Menu",
+        "i18nKey": "menu.sent",
+        "url": "/dashboard/",
+        "exact": false,
+        "external": false,
+        "target": null,
+        "disabled": false,
+        "roles": [
+            "admin",
+            "staff"
+        ],
+        "dividerBefore": false,
+        "initiallyOpen": false,
+        "children": []
+    },
+    {
+        "id": "dashboard",
+        "label": "Dashboard",
+        "icon": "barChart",
+        "url": "/dashboard",
+        "initiallyOpen": false,
+        "external": false
+    },
+    {
+        "id": "app",
+        "label": "App",
+        "icon": "apps",
+        "url": null,
+        "initiallyOpen": false,
+        "children": [
+            {
+                "id": "people",
+                "label": "People",
+                "url": null,
+                "children": [
+                    {
+                        "id": "user",
+                        "label": "User",
+                        "url": "/dashboard/user"
+                    }
+                ]
+            },
+            {
+                "id": "structure",
+                "label": "Structure",
+                "url": null,
+                "children": [
+                    {
+                        "id": "department",
+                        "label": "Department",
+                        "url": "/dashboard/department"
+                    },
+                    {
+                        "id": "department-title",
+                        "label": "Department Title",
+                        "url": "/dashboard/department-title"
+                    }
+                ]
+            },
+            {
+                "id": "contracts",
+                "label": "Contracts",
+                "url": null,
+                "children": [
+                    {
+                        "id": "contract-type",
+                        "label": "Contract Type",
+                        "url": "/dashboard/contract-type"
+                    },
+                    {
+                        "id": "employee-contract",
+                        "label": "Employee Contract",
+                        "url": "/dashboard/employee-contract"
+                    }
+                ]
+            },
+            {
+                "id": "recruitment",
+                "label": "Recruitment",
+                "url": null,
+                "children": [
+                    {
+                        "id": "recruitment-settings",
+                        "label": "Recruitment Settings",
+                        "url": "/dashboard/recruitment-settings"
+                    },
+                    {
+                        "id": "recruitment-request",
+                        "label": "Recruitment Requests",
+                        "url": "/dashboard/recruitment-request"
+                    }
+                ]
+            },
+            {
+                "id": "time",
+                "label": "Time",
+                "url": null,
+                "children": [
+                    {
+                        "id": "leave-request",
+                        "label": "Leave Requests",
+                        "url": "/dashboard/leave-request"
+                    },
+                    {
+                        "id": "calendar",
+                        "label": "Calendar",
+                        "url": "/dashboard/calendar"
+                    }
+                ]
+            },
+            {
+                "id": "resources",
+                "label": "Resources",
+                "url": null,
+                "children": [
+                    {
+                        "id": "asset-management",
+                        "label": "Assets",
+                        "url": "/dashboard/asset-management"
+                    },
+                    {
+                        "id": "media",
+                        "label": "Media",
+                        "url": "/dashboard/media"
+                    }
+                ]
+            },
+            {
+                "id": "communication",
+                "label": "Communication",
+                "url": null,
+                "children": [
+                    {
+                        "id": "notifications",
+                        "label": "Notifications",
+                        "url": "/dashboard/notifications"
+                    },
+                    {
+                        "id": "chat-direct",
+                        "label": "Direct Chat",
+                        "url": "/dashboard/chat"
+                    },
+                    {
+                        "id": "chat-group",
+                        "label": "Group Chat",
+                        "url": "/dashboard/chat-group"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "administration",
+        "label": "Administration",
+        "icon": "security",
+        "url": null,
+        "systemAdminOnly": true,
+        "initiallyOpen": false,
+        "children": [
+            {
+                "id": "system-user",
+                "label": "System Users",
+                "url": "/dashboard/system-user"
+            },
+            {
+                "id": "role-permission",
+                "label": "Role",
+                "url": "/dashboard/role",
+                "children": [
+                    {
+                        "id": "role",
+                        "label": "Role",
+                        "url": "/dashboard/role"
+                    },
+                    {
+                        "id": "permission",
+                        "label": "Permission",
+                        "url": "/dashboard/permission"
+                    },
+                    {
+                        "id": "permission-matrix",
+                        "label": "Permission Matrix",
+                        "url": "/dashboard/permission-matrix"
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -8,6 +8,7 @@ use App\Repositories\LeaveRequest\Contracts\LeaveRequestRepositoryInterface;
 use App\Services\Base\Concretes\BaseService;
 use App\Services\Contracts\LeaveRequestServiceInterface;
 use App\Services\Contracts\RecruitmentSettingServiceInterface;
+use App\Services\Support\AppNotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -22,7 +23,8 @@ class LeaveRequestService extends BaseService implements LeaveRequestServiceInte
 {
     public function __construct(
         protected LeaveRequestRepositoryInterface $leaveRequestRepository,
-        protected RecruitmentSettingServiceInterface $recruitmentSettingService
+        protected RecruitmentSettingServiceInterface $recruitmentSettingService,
+        protected AppNotificationService $notificationService
     ) {
         $this->setRepository($leaveRequestRepository);
     }
@@ -118,8 +120,19 @@ class LeaveRequestService extends BaseService implements LeaveRequestServiceInte
         $actor = Auth::user();
         $detail = $actor?->detail;
         if (!$detail?->department_id || !$detail?->department_title_id) {
+            $missingFields = [];
+            if (!$detail?->department_id) {
+                $missingFields[] = 'department';
+            }
+            if (!$detail?->department_title_id) {
+                $missingFields[] = 'department title';
+            }
+
             throw ValidationException::withMessages([
-                'user' => 'Requester must have department and department title information.',
+                'user' => sprintf(
+                    'Requester is missing %s. Please update the user profile before creating a leave request.',
+                    implode(' and ', $missingFields)
+                ),
             ]);
         }
         $organizationId = (int) ($detail?->organization_id ?? 0);
@@ -197,6 +210,24 @@ class LeaveRequestService extends BaseService implements LeaveRequestServiceInte
             'rejection_reason' => null,
         ]);
 
+        $this->notificationService->notifyUser($item->user()->firstOrFail(), [
+            'kind' => 'leave_request',
+            'title' => 'Yeu cau nghi phep da duoc duyet',
+            'message' => sprintf(
+                'Yeu cau %s tu %s den %s da duoc duyet.',
+                $item->request_no,
+                $item->start_date?->format('d/m/Y'),
+                $item->end_date?->format('d/m/Y')
+            ),
+            'action_url' => '/dashboard/leave-request',
+            'entity_type' => 'leave_request',
+            'entity_id' => $item->id,
+            'organization_id' => $item->organization_id,
+            'meta' => [
+                'status' => 'approved',
+            ],
+        ]);
+
         return $this->getLeaveRequestById($id);
     }
 
@@ -216,6 +247,23 @@ class LeaveRequestService extends BaseService implements LeaveRequestServiceInte
             'rejected_at' => now(),
             'approved_at' => null,
             'rejection_reason' => $reason,
+        ]);
+
+        $this->notificationService->notifyUser($item->user()->firstOrFail(), [
+            'kind' => 'leave_request',
+            'title' => 'Yeu cau nghi phep bi tu choi',
+            'message' => sprintf(
+                'Yeu cau %s da bi tu choi. Ly do: %s',
+                $item->request_no,
+                $reason
+            ),
+            'action_url' => '/dashboard/leave-request',
+            'entity_type' => 'leave_request',
+            'entity_id' => $item->id,
+            'organization_id' => $item->organization_id,
+            'meta' => [
+                'status' => 'rejected',
+            ],
         ]);
 
         return $this->getLeaveRequestById($id);

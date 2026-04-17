@@ -10,6 +10,7 @@ use App\Repositories\Asset\Contracts\AssetRepositoryInterface;
 use App\Services\Base\Concretes\BaseService;
 use App\Services\Concerns\ResolvesOrganizationScope;
 use App\Services\Contracts\AssetAssignmentServiceInterface;
+use App\Services\Support\AppNotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -25,7 +26,8 @@ class AssetAssignmentService extends BaseService implements AssetAssignmentServi
 
     public function __construct(
         protected AssetAssignmentRepositoryInterface $assetAssignmentRepository,
-        protected AssetRepositoryInterface $assetRepository
+        protected AssetRepositoryInterface $assetRepository,
+        protected AppNotificationService $notificationService
     ) {
         $this->setRepository($assetAssignmentRepository);
     }
@@ -37,7 +39,7 @@ class AssetAssignmentService extends BaseService implements AssetAssignmentServi
 
     public function getAllAssetAssignments(): Collection
     {
-        $query = $this->assetAssignmentRepository->query()->with(['asset', 'user', 'department', 'assignedBy']);
+        $query = $this->assetAssignmentRepository->query()->with(['asset', 'user', 'department', 'assignedBy', 'recallRequestedBy']);
         if ($organizationId = $this->resolveOrganizationIdFromAuth()) {
             $query->where('organization_id', $organizationId);
         }
@@ -47,7 +49,7 @@ class AssetAssignmentService extends BaseService implements AssetAssignmentServi
 
     public function getFilteredAssetAssignments(?Request $request = null, int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->assetAssignmentRepository->query()->with(['asset', 'user', 'department', 'assignedBy']);
+        $query = $this->assetAssignmentRepository->query()->with(['asset', 'user', 'department', 'assignedBy', 'recallRequestedBy']);
         if ($organizationId = $this->resolveOrganizationIdFromAuth()) {
             $query->where('organization_id', $organizationId);
         }
@@ -69,7 +71,7 @@ class AssetAssignmentService extends BaseService implements AssetAssignmentServi
 
     public function getAssetAssignmentById(int $id): ?Model
     {
-        $query = $this->assetAssignmentRepository->query()->with(['asset', 'user', 'department', 'assignedBy']);
+        $query = $this->assetAssignmentRepository->query()->with(['asset', 'user', 'department', 'assignedBy', 'recallRequestedBy']);
         if ($organizationId = $this->resolveOrganizationIdFromAuth()) {
             $query->where('organization_id', $organizationId);
         }
@@ -142,6 +144,49 @@ class AssetAssignmentService extends BaseService implements AssetAssignmentServi
                 'location_status' => $data['location_status'] ?? 'storage',
                 'condition_status' => $data['condition_status'] ?? $asset->condition_status,
             ]);
+
+            return $assignment;
+        });
+    }
+
+    public function requestRecall(int $id, array $data): Model
+    {
+        return DB::transaction(function () use ($id, $data) {
+            /** @var AssetAssignment $assignment */
+            $assignment = $this->getAssetAssignmentById($id);
+
+            if ($assignment->status !== 'assigned' || $assignment->returned_at) {
+                throw ValidationException::withMessages([
+                    'status' => 'Only active assignments can be recalled.',
+                ]);
+            }
+
+            $payload = [
+                'recall_requested_at' => now(),
+                'recall_requested_by_user_id' => Auth::id(),
+                'recall_note' => $data['recall_note'] ?? null,
+            ];
+
+            $this->repository->update($assignment->id, $payload);
+            $assignment = $this->getAssetAssignmentById($id);
+            $assignment->loadMissing(['asset', 'user', 'department', 'assignedBy', 'recallRequestedBy']);
+
+            if ($assignment->user) {
+                $this->notificationService->notifyUser($assignment->user, [
+                    'kind' => 'asset_recall',
+                    'title' => 'Yeu cau thu hoi tai san',
+                    'message' => sprintf(
+                        'Tai san %s - %s da duoc yeu cau thu hoi.%s',
+                        $assignment->asset?->asset_code ?: 'N/A',
+                        $assignment->asset?->name ?: 'Tai san',
+                        !empty($payload['recall_note']) ? ' Ghi chu: '.$payload['recall_note'] : ''
+                    ),
+                    'action_url' => '/dashboard/asset-management',
+                    'organization_id' => $assignment->organization_id,
+                    'entity_type' => 'asset_assignment',
+                    'entity_id' => $assignment->id,
+                ]);
+            }
 
             return $assignment;
         });

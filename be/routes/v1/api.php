@@ -7,12 +7,14 @@ use App\Http\Controllers\Api\V1\AssetCategoryController;
 use App\Http\Controllers\Api\V1\AssetController;
 use App\Http\Controllers\Api\V1\AssetMaintenanceController;
 use App\Http\Controllers\Api\V1\AssetReportController;
+use App\Http\Controllers\Api\V1\ChatConversationController;
 use App\Http\Controllers\Api\V1\ContractTypeController;
 use App\Http\Controllers\Api\V1\DepartmentController;
 use App\Http\Controllers\Api\V1\DepartmentTitleController;
 use App\Http\Controllers\Api\V1\EmployeeContractController;
 use App\Http\Controllers\Api\V1\LeaveRequestController;
 use App\Http\Controllers\Api\V1\MediaController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\RecruitmentRequestController;
@@ -43,6 +45,7 @@ Route::get('/ping', function () {
 // Search routes (public)
 Route::get('/search', [SearchController::class, 'global'])->name('search.global');
 Route::get('/search/users', [SearchController::class, 'users'])->name('search.users');
+Route::get('organization/active', [OrganizationController::class, 'active'])->name('organizations.active.public');
 
 Route::name('auth.')
     ->prefix('auth')
@@ -70,8 +73,15 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/statistics/assets/overview', [AssetReportController::class, 'overview'])->name('statistics.assets.overview');
     Route::post('/statistics/assets/export', [AssetReportController::class, 'export'])->name('statistics.assets.export');
 
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread_count');
+    Route::patch('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read_all');
+    Route::patch('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('notifications/broadcast', [NotificationController::class, 'broadcast'])->name('notifications.broadcast');
+
     Route::get('users/active', [UserController::class, 'active'])->name('users.active');
     Route::get('users/all', [UserController::class, 'all'])->name('users.all');
+    Route::patch('/user/{user}/password', [UserController::class, 'resetPassword'])->name('users.reset_password');
     Route::apiResource('user', UserController::class)->names('users');
     Route::delete('users', [UserController::class, 'bulkDestroy'])->name('users.bulk_destroy');
     Route::post('/user/{user}/role', [UserController::class, 'assignRoles'])->name('user.assign_roles');
@@ -89,7 +99,6 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::delete('medias', [MediaController::class, 'bulkDestroy'])->name('media.bulk_destroy');
 
     Route::get('organization/all', [OrganizationController::class, 'all'])->name('organizations.all');
-    Route::get('organization/active', [OrganizationController::class, 'active'])->name('organizations.active');
     Route::apiResource('organization', OrganizationController::class)->names('organizations');
     Route::delete('organizations', [OrganizationController::class, 'bulkDestroy'])->name('organizations.bulk_destroy');
 
@@ -158,11 +167,17 @@ Route::group(['middleware' => 'auth:api'], function () {
 
     Route::get('asset-assignment/all', [AssetAssignmentController::class, 'all'])->name('asset_assignments.all');
     Route::get('asset-assignment/active', [AssetAssignmentController::class, 'active'])->name('asset_assignments.active');
+    Route::patch('asset-assignment/{asset_assignment}/recall-request', [AssetAssignmentController::class, 'requestRecall'])->name('asset_assignments.recall_request');
     Route::patch('asset-assignment/{asset_assignment}/return', [AssetAssignmentController::class, 'returnAsset'])->name('asset_assignments.return');
     Route::apiResource('asset-assignment', AssetAssignmentController::class)
         ->parameters(['asset-assignment' => 'asset_assignment'])
         ->names('asset_assignments');
     Route::delete('asset-assignments', [AssetAssignmentController::class, 'bulkDestroy'])->name('asset_assignments.bulk_destroy');
+
+    Route::get('chat-conversations', [ChatConversationController::class, 'index'])->name('chat_conversations.index');
+    Route::post('chat-conversations', [ChatConversationController::class, 'store'])->name('chat_conversations.store');
+    Route::get('chat-conversations/{conversation}/messages', [ChatConversationController::class, 'messages'])->name('chat_conversations.messages');
+    Route::post('chat-conversations/{conversation}/messages', [ChatConversationController::class, 'sendMessage'])->name('chat_conversations.send_message');
 
     Route::get('asset-maintenance/all', [AssetMaintenanceController::class, 'all'])->name('asset_maintenances.all');
     Route::get('asset-maintenance/active', [AssetMaintenanceController::class, 'active'])->name('asset_maintenances.active');

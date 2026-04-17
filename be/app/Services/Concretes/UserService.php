@@ -126,6 +126,20 @@ class UserService extends BaseService implements UserServiceInterface
         return $this->updateUserInternal($id, $data, $organizationId);
     }
 
+    public function resetUserPassword(int $id, string $password): Model
+    {
+        $organizationId = $this->resolveScopedOrganizationIdFromAuth();
+        $this->assertUserInOrganizationScope($id, $organizationId);
+
+        try {
+            return $this->repository->update($id, [
+                'password' => $password,
+            ]);
+        } catch (ModelNotFoundException) {
+            throw new ModelNotFoundException('User not found');
+        }
+    }
+
     public function deleteUser(int $id): bool
     {
         try {

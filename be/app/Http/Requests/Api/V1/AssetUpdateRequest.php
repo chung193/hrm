@@ -23,7 +23,6 @@ class AssetUpdateRequest extends FormRequest
             'current_user_id' => ['nullable', 'integer', 'exists:users,id'],
             'asset_code' => ['required', 'string', 'max:100', Rule::unique('assets', 'asset_code')->ignore($assetId)],
             'qr_code' => ['nullable', 'string', 'max:150', Rule::unique('assets', 'qr_code')->ignore($assetId)],
-            'qr_image' => ['nullable', 'string'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'purchase_date' => ['nullable', 'date'],

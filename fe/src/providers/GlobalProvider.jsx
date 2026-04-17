@@ -9,6 +9,19 @@ import { authInstance, ORGANIZATION_SCOPE_STORAGE_KEY } from '@services/axios'
 
 const GlobalContext = createContext()
 
+const buildAuthHeaders = (user) => {
+    const token = user?.token;
+    const tokenType = (user?.token_type || 'Bearer').trim();
+
+    if (!token) {
+        return {};
+    }
+
+    return {
+        Authorization: `${tokenType} ${token}`,
+    };
+};
+
 export const useGlobalContext = () => {
     return useContext(GlobalContext)
 }
@@ -109,7 +122,9 @@ const GlobalProvider = ({ children }) => {
         }
 
         try {
-            const profileRes = await authInstance.get(`user/${user.id}`);
+            const profileRes = await authInstance.get(`user/${user.id}`, {
+                headers: buildAuthHeaders(user),
+            });
             const profile = profileRes?.data?.data || null;
             const roleNames = Array.isArray(profile?.roles)
                 ? profile.roles.map((role) => String(role?.name || '').toLowerCase())
@@ -123,7 +138,10 @@ const GlobalProvider = ({ children }) => {
             let selectedOrganizationId = ownOrganizationId;
 
             if (canSwitchOrganization) {
-                const orgRes = await authInstance.get('organization/all', { skipOrganizationScope: true });
+                const orgRes = await authInstance.get('organization/all', {
+                    skipOrganizationScope: true,
+                    headers: buildAuthHeaders(user),
+                });
                 organizations = orgRes?.data?.data || [];
 
                 const storedScopeId = Number(localStorage.getItem(ORGANIZATION_SCOPE_STORAGE_KEY) || 0);

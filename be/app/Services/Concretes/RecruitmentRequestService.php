@@ -7,6 +7,7 @@ use App\Repositories\RecruitmentRequest\Contracts\RecruitmentRequestRepositoryIn
 use App\Services\Base\Concretes\BaseService;
 use App\Services\Contracts\RecruitmentSettingServiceInterface;
 use App\Services\Contracts\RecruitmentRequestServiceInterface;
+use App\Services\Support\AppNotificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -28,7 +29,8 @@ class RecruitmentRequestService extends BaseService implements RecruitmentReques
 
     public function __construct(
         protected RecruitmentRequestRepositoryInterface $recruitmentRequestRepository,
-        protected RecruitmentSettingServiceInterface $recruitmentSettingService
+        protected RecruitmentSettingServiceInterface $recruitmentSettingService,
+        protected AppNotificationService $notificationService
     ) {
         $this->setRepository($recruitmentRequestRepository);
     }
@@ -102,8 +104,19 @@ class RecruitmentRequestService extends BaseService implements RecruitmentReques
         $actorDetail = $actor?->detail;
 
         if (!$actorDetail?->department_id || !$actorDetail?->department_title_id) {
+            $missingFields = [];
+            if (!$actorDetail?->department_id) {
+                $missingFields[] = 'department';
+            }
+            if (!$actorDetail?->department_title_id) {
+                $missingFields[] = 'department title';
+            }
+
             throw ValidationException::withMessages([
-                'user' => 'Requester must have department and department title information.',
+                'user' => sprintf(
+                    'Requester is missing %s. Please update the user profile before creating a recruitment request.',
+                    implode(' and ', $missingFields)
+                ),
             ]);
         }
 
@@ -213,6 +226,27 @@ class RecruitmentRequestService extends BaseService implements RecruitmentReques
                 }
             }
 
+            $requester = $item->requestedBy()->first();
+            if ($requester) {
+                $this->notificationService->notifyUser($requester, [
+                    'kind' => 'recruitment_request',
+                    'title' => 'Cap nhat yeu cau tuyen dung',
+                    'message' => sprintf(
+                        'Yeu cau %s cho vi tri %s da chuyen sang trang thai %s.',
+                        $item->request_no,
+                        $item->requested_position,
+                        $nextStatus
+                    ),
+                    'action_url' => '/dashboard/recruitment-request',
+                    'entity_type' => 'recruitment_request',
+                    'entity_id' => $item->id,
+                    'organization_id' => $item->organization_id,
+                    'meta' => [
+                        'status' => $nextStatus,
+                    ],
+                ]);
+            }
+
             return $item->load([
                 'organization',
                 'requestedBy',
@@ -240,6 +274,26 @@ class RecruitmentRequestService extends BaseService implements RecruitmentReques
                     'received_by_user_id' => $actor->id,
                     'received_at' => now(),
                     'status_updated_at' => now(),
+                ]);
+            }
+
+            $requester = $item->requestedBy()->first();
+            if ($requester) {
+                $this->notificationService->notifyUser($requester, [
+                    'kind' => 'recruitment_request',
+                    'title' => 'Yeu cau tuyen dung da duoc tiep nhan',
+                    'message' => sprintf(
+                        'Yeu cau %s cho vi tri %s da duoc phong HR tiep nhan.',
+                        $item->request_no,
+                        $item->requested_position
+                    ),
+                    'action_url' => '/dashboard/recruitment-request',
+                    'entity_type' => 'recruitment_request',
+                    'entity_id' => $item->id,
+                    'organization_id' => $item->organization_id,
+                    'meta' => [
+                        'status' => 'received',
+                    ],
                 ]);
             }
 

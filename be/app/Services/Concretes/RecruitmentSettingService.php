@@ -20,8 +20,7 @@ class RecruitmentSettingService implements RecruitmentSettingServiceInterface
     public function getSettings(?int $organizationId = null): RecruitmentSetting
     {
         $resolvedOrganizationId = $this->resolveOrganizationId($organizationId);
-        $settings = $this->recruitmentSettingRepository
-            ->query()
+        $settings = RecruitmentSetting::query()
             ->with(['organization', 'leadershipDepartment', 'hrDepartment'])
             ->where('organization_id', $resolvedOrganizationId)
             ->first();

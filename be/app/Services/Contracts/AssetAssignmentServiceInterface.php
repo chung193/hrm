@@ -24,6 +24,8 @@ interface AssetAssignmentServiceInterface extends BaseServiceInterface
 
     public function returnAssetAssignment(int $id, array $data): Model;
 
+    public function requestRecall(int $id, array $data): Model;
+
     public function deleteAssetAssignment(int $id): bool;
 
     public function deleteAssetAssignments(array $ids): int;

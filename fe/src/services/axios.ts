@@ -14,6 +14,28 @@ export const instance = axios.create({
     baseURL: apiUrl,
 })
 
+export const applyAuthToken = (user: { token?: string; token_type?: string } | null) => {
+    const token = user?.token;
+    const tokenType = (user?.token_type || 'Bearer').trim();
+
+    if (token) {
+        const value = `${tokenType} ${token}`;
+        authInstance.defaults.headers.common.Authorization = value;
+        authInstance.defaults.headers.Authorization = value;
+        return;
+    }
+
+    delete authInstance.defaults.headers.common.Authorization;
+    delete authInstance.defaults.headers.Authorization;
+}
+
+try {
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+    applyAuthToken(storedUser);
+} catch (error) {
+    applyAuthToken(null);
+}
+
 authInstance.interceptors.request.use(
     (config) => {
         let user = null;
@@ -26,7 +48,15 @@ authInstance.interceptors.request.use(
         const token = user?.token;
         const token_type = (user?.token_type || 'Bearer').trim();
         if (token) {
-            config.headers.Authorization = `${token_type} ${token}`
+            const value = `${token_type} ${token}`;
+            if (config.headers && typeof config.headers.set === 'function') {
+                config.headers.set('Authorization', value);
+            } else {
+                config.headers = {
+                    ...(config.headers || {}),
+                    Authorization: value,
+                };
+            }
         }
 
         const url = String(config.url || '').replace(/^\//, '');

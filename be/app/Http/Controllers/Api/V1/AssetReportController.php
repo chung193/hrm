@@ -28,7 +28,7 @@ class AssetReportController extends BaseApiController
     private function buildOverviewData(): array
     {
         $organizationId = $this->resolveOrganizationIdFromAuth();
-        $baseQuery = Asset::query()->when($organizationId, fn ($query) => $query->where('organization_id', $organizationId));
+        $baseQuery = Asset::query()->when($organizationId, fn ($query) => $query->where('assets.organization_id', $organizationId));
 
         $departmentSummary = (clone $baseQuery)
             ->leftJoin('departments', 'assets.department_id', '=', 'departments.id')
